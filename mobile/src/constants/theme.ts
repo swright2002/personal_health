@@ -37,10 +37,10 @@ export const Brand = {
   barTrack: '#e7ecee',
 } as const;
 
-/** Per-member colors. The primary user uses the theme accent; Mara is fixed coral. */
+/** Per-member colors. The primary user uses the theme accent; Jacq is fixed coral. */
 export const Members = {
   you: { color: '#429c9c', deep: '#0b5b62', tint: '#d8f5f5' },
-  mara: { color: '#cf6963', deep: '#8e3f36', tint: '#ffe1da' },
+  jacq: { color: '#cf6963', deep: '#8e3f36', tint: '#ffe1da' },
 } as const;
 
 /** Nutritionist finding severities. */

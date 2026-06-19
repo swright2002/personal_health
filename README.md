@@ -12,4 +12,4 @@ A personal health tracker for iOS. The **meal planner** is the first module; pla
 - **Anthropic API (`claude-opus-4-8`)** — the Coach + Nutritionist agents. The API key lives in Supabase Edge Function secrets, never in the app.
 
 ## Status
-**M0 — Foundations** (project setup). See PLAN.md §6 for the milestone roadmap.
+**M1 — Data model + seed** ✓ — schema, RLS, grants, and the prototype's recipes/day are live on Supabase; the app is wired to it via `mobile/.env`. Next up: auth + the meal-module screens (M2). See PLAN.md §6 for the roadmap.

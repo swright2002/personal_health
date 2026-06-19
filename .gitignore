@@ -37,3 +37,7 @@ Thumbs.db
 # Source design artifact (the handoff itself lives in design/)
 *.zip
 extracted/
+
+# Scratch — screenshots / local notes (root-level only)
+/Screenshot*.png
+/screenshots/
