@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+
+# Env / secrets — never commit keys (Anthropic key lives in Supabase Edge Function secrets)
+.env
+.env*.local
+.env.local
+
+# Supabase local artifacts
+supabase/.branches/
+supabase/.temp/
+
+# Native build output
+ios/Pods/
+ios/build/
+android/build/
+android/app/build/
+*.keystore
+*.jks
+
+# Logs
+npm-debug.*
+yarn-error.*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/
+
+# Source design artifact (the handoff itself lives in design/)
+*.zip
+extracted/

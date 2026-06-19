@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: oklch(0.85 0.01 220); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+</style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;font-family:'Hanken Grotesk',system-ui,sans-serif;background:oklch(0.985 0.006 215);color:oklch(0.31 0.02 235);font-size:15px;line-height:1.45">
+
+  <aside style="width:236px;flex:none;background:oklch(0.995 0.004 210);border-right:1px solid oklch(0.92 0.006 220);display:flex;flex-direction:column;padding:22px 16px;position:sticky;top:0;height:100vh">
+    <div style="display:flex;align-items:center;gap:11px;padding:4px 8px 22px">
+      <span style="width:30px;height:30px;border-radius:999px;border:3px solid {{ accent }};display:inline-flex;align-items:center;justify-content:center">
+        <span style="width:10px;height:10px;border-radius:999px;background:{{ accent }};display:inline-block"></span>
+      </span>
+      <span style="font-weight:800;font-size:19px;letter-spacing:-0.02em">Harbor</span>
+    </div>
+
+    <sc-for list="{{ nav }}" as="item" hint-placeholder-count="4">
+      <button onClick="{{ item.onClick }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:none;cursor:pointer;padding:11px 13px;border-radius:{{ item.rad }};background:{{ item.bg }};color:{{ item.fg }};font:inherit;font-weight:600;font-size:14.5px;margin-bottom:3px">
+        <span style="width:9px;height:9px;border-radius:{{ item.dotRad }};background:{{ item.dot }};display:inline-block;flex:none"></span>
+        {{ item.label }}
+      </button>
+    </sc-for>
+
+    <div style="margin-top:auto;border-top:1px solid oklch(0.93 0.006 220);padding-top:14px">
+      <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:oklch(0.6 0.01 230);font-family:'Spline Sans Mono',monospace;margin-bottom:9px">Compare looks</div>
+      <div style="display:flex;gap:6px">
+        <button onClick="{{ onThemeA }}" style="flex:1;cursor:pointer;font:inherit;font-weight:700;font-size:12.5px;padding:8px;border-radius:8px;border:1.5px solid {{ tA.bd }};background:{{ tA.bg }};color:{{ tA.fg }}">A · Coastal</button>
+        <button onClick="{{ onThemeB }}" style="flex:1;cursor:pointer;font:inherit;font-weight:700;font-size:12.5px;padding:8px;border-radius:8px;border:1.5px solid {{ tB.bd }};background:{{ tB.bg }};color:{{ tB.fg }}">B · Clinic</button>
+      </div>
+      <div style="margin-top:16px;padding:7px 6px">
+        <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:oklch(0.6 0.01 230);font-family:'Spline Sans Mono',monospace;margin-bottom:9px">Household</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+          <span style="width:30px;height:30px;border-radius:999px;background:{{ accent }};display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:12px;flex:none">J</span>
+          <div style="line-height:1.2">
+            <div style="font-weight:700;font-size:13.5px">Jordan · you</div>
+            <div style="font-size:11.5px;color:oklch(0.6 0.01 230)">42 · Runner · Wt-loss</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="width:30px;height:30px;border-radius:999px;background:oklch(0.64 0.13 25);display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:12px;flex:none">M</span>
+          <div style="line-height:1.2">
+            <div style="font-weight:700;font-size:13.5px">Mara</div>
+            <div style="font-size:11.5px;color:oklch(0.6 0.01 230)">Vegan · cooks &amp; shops</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 34px;border-bottom:1px solid oklch(0.93 0.006 220);position:sticky;top:0;background:oklch(0.985 0.006 215);z-index:5">
+      <div>
+        <div style="font-weight:800;font-size:22px;letter-spacing:-0.02em">{{ pageTitle }}</div>
+        <div style="font-size:13px;color:oklch(0.58 0.01 230);font-family:'Spline Sans Mono',monospace;margin-top:2px">{{ pageSub }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:oklch(0.55 0.01 230)">{{ dateLabel }}</span>
+        <span style="font-size:12px;font-weight:700;color:{{ deep }};background:{{ tint }};padding:6px 12px;border-radius:999px">Viewing look {{ themeTag }}</span>
+      </div>
+    </header>
+
+    <div style="padding:30px 34px 64px">
+
+      <!-- ============ PLAN ============ -->
+      <sc-if value="{{ isPlan }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px">
+          <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+            <button onClick="{{ d.onClick }}" style="cursor:pointer;font:inherit;border:1.5px solid {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};border-radius:{{ rad }};padding:11px 15px;text-align:center;min-width:70px">
+              <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;opacity:.7">{{ d.dow }}</div>
+              <div style="font-size:20px;font-weight:800;margin:2px 0">{{ d.date }}</div>
+              <div style="font-size:10px;font-weight:700;color:{{ d.runColor }};font-family:'Spline Sans Mono',monospace">{{ d.runLabel }}</div>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;align-items:start">
+          <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:24px">
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+              <sc-for list="{{ personTabs }}" as="pt" hint-placeholder-count="2">
+                <button onClick="{{ pt.onClick }}" style="flex:1;display:flex;align-items:center;gap:9px;cursor:pointer;font:inherit;text-align:left;border:1.5px solid {{ pt.bd }};background:{{ pt.bg }};border-radius:{{ rad }};padding:9px 12px">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ pt.avBg }};color:#fff;font-weight:800;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none">{{ pt.initials }}</span>
+                  <span style="line-height:1.2">
+                    <span style="display:block;font-weight:700;font-size:14px;color:{{ pt.nameFg }}">{{ pt.name }}</span>
+                    <span style="display:block;font-size:11.5px;font-weight:600;color:{{ pt.dietFg }}">{{ pt.diet }}</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+              <h2 style="margin:0;font-size:17px;font-weight:800">{{ personName }}’s targets</h2>
+              <span style="font-size:12px;font-weight:700;color:{{ deep }};background:{{ tint }};padding:5px 11px;border-radius:999px">{{ modeLabel }}</span>
+            </div>
+            <p style="margin:6px 0 20px;font-size:13px;color:oklch(0.55 0.01 230)">{{ modeNote }}</p>
+
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="5">
+              <div style="margin-bottom:15px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+                  <span style="font-weight:600;font-size:14px">{{ b.label }}</span>
+                  <span style="font-family:'Spline Sans Mono',monospace;font-size:12.5px;color:oklch(0.5 0.01 230)">{{ b.text }} <span style="color:{{ b.noteColor }};font-weight:600">{{ b.note }}</span></span>
+                </div>
+                <div style="height:9px;border-radius:999px;background:oklch(0.94 0.006 220);overflow:hidden">
+                  <div style="height:100%;width:{{ b.pct }};background:{{ b.color }};border-radius:999px"></div>
+                </div>
+              </div>
+            </sc-for>
+            <p style="margin:14px 0 0;font-size:12px;color:oklch(0.6 0.01 230);font-style:italic">Totals add up {{ personName }}’s meals below — leaving headroom for drinks &amp; extras.</p>
+          </section>
+
+          <section>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <h2 style="margin:0;font-size:17px;font-weight:800">{{ personName }}’s day</h2>
+              <span style="font-size:12px;font-weight:700;color:{{ deep }};background:{{ tint }};padding:5px 11px;border-radius:999px">{{ myCount }} meals</span>
+            </div>
+            <p style="margin:0 0 13px;font-size:12.5px;color:oklch(0.58 0.01 230)">{{ otherName }} has {{ otherCount }} today · “Together” meals show both of you</p>
+
+            <sc-for list="{{ meals }}" as="m" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:11px 13px;margin-bottom:9px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+                  <span style="font-size:11px;letter-spacing:0.05em;text-transform:uppercase;font-weight:700;color:{{ deep }};font-family:'Spline Sans Mono',monospace;flex:1">{{ m.label }}</span>
+                  <button onClick="{{ m.onToggle }}" style="cursor:pointer;font:inherit;font-size:10.5px;font-weight:700;color:{{ m.badgeColor }};background:{{ soft }};border:1px solid {{ tint }};border-radius:999px;padding:3px 10px">{{ m.togetherLabel }}</button>
+                  <button onClick="{{ m.onRemove }}" title="Remove meal" style="cursor:pointer;font:inherit;font-size:13px;font-weight:800;color:oklch(0.62 0.01 230);background:none;border:none;padding:2px 5px;line-height:1">×</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:11px">
+                  <span style="display:flex;flex:none">
+                    <sc-for list="{{ m.avatars }}" as="a" hint-placeholder-count="1">
+                      <span style="width:24px;height:24px;border-radius:999px;background:{{ a.color }};color:#fff;font-weight:800;font-size:10px;display:inline-flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-7px">{{ a.initials }}</span>
+                    </sc-for>
+                  </span>
+                  <button onClick="{{ m.onOpen }}" style="flex:1;min-width:0;text-align:left;cursor:pointer;font:inherit;background:none;border:none;padding:0">
+                    <span style="display:block;font-weight:700;font-size:14.5px;line-height:1.25">{{ m.name }}</span>
+                    <span style="display:block;font-size:11px;font-weight:700;color:{{ m.badgeColor }};letter-spacing:0.03em;margin-top:2px">{{ m.badge }}</span>
+                  </button>
+                  <span style="font-family:'Spline Sans Mono',monospace;font-size:12.5px;color:oklch(0.5 0.01 230)">{{ m.kcal }}</span>
+                  <button onClick="{{ m.onChange }}" style="cursor:pointer;font:inherit;font-size:11px;font-weight:700;color:{{ deep }};background:{{ tint }};border:none;border-radius:999px;padding:5px 11px">Change</button>
+                </div>
+              </div>
+            </sc-for>
+
+            <button onClick="{{ onAddMeal }}" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;cursor:pointer;font:inherit;font-size:13.5px;font-weight:700;color:{{ deep }};background:none;border:1.5px dashed oklch(0.84 0.01 220);border-radius:{{ rad }};padding:13px;margin-bottom:14px">+ Add a meal to {{ personName }}’s day</button>
+
+            <div style="background:{{ soft }};border:1px solid {{ tint }};border-radius:{{ rad }};padding:16px 18px;margin-top:14px">
+              <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;color:{{ deep }};margin-bottom:6px">
+                <span style="width:7px;height:7px;border-radius:999px;background:{{ accent }}"></span> COACH
+              </div>
+              <p style="margin:0;font-size:13.5px;line-height:1.5">{{ coachTip }}</p>
+              <p style="margin:8px 0 0;font-size:11.5px;color:oklch(0.55 0.01 230);font-family:'Spline Sans Mono',monospace">{{ coachCite }}</p>
+            </div>
+          </section>
+        </div>
+
+        <section style="margin-top:22px;background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:18px 22px">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+            <span style="width:32px;height:32px;border-radius:999px;background:{{ tint }};display:inline-flex;align-items:center;justify-content:center;flex:none">
+              <span style="width:11px;height:11px;border-radius:999px;background:{{ accent }}"></span>
+            </span>
+            <div style="line-height:1.25;flex:1">
+              <div style="font-weight:800;font-size:15px">Ask your coach about {{ activeDateLabel }}</div>
+              <div style="font-size:12.5px;color:oklch(0.58 0.01 230)">Swap a meal, plan around what you have, or rebalance macros — it updates this day live</div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:13px">
+            <sc-for list="{{ planThread }}" as="p" hint-placeholder-count="2">
+              <div style="align-self:{{ p.align }};max-width:88%">
+                <div style="font-size:10px;letter-spacing:0.05em;text-transform:uppercase;font-weight:700;color:oklch(0.6 0.01 230);margin:0 4px 3px;text-align:{{ p.align }}">{{ p.who }}</div>
+                <div style="background:{{ p.bg }};color:{{ p.fg }};border:{{ p.border }};border-radius:{{ p.radius }};padding:10px 13px;font-size:13.5px;line-height:1.5">{{ p.text }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
+            <sc-for list="{{ planPrompts }}" as="q" hint-placeholder-count="3">
+              <button onClick="{{ q.onClick }}" style="cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;color:{{ deep }};background:{{ soft }};border:1px solid {{ tint }};border-radius:999px;padding:7px 13px">{{ q.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;gap:9px;align-items:center">
+            <input value="{{ planDraft }}" onChange="{{ onPlanDraft }}" onKeyDown="{{ onPlanKey }}" placeholder="e.g. We have a lot of cucumbers from the garden — plan around them" style="flex:1;font:inherit;font-size:14px;padding:11px 15px;border:1.5px solid oklch(0.9 0.006 220);border-radius:999px;outline:none;background:oklch(0.99 0.003 220)" />
+            <button onClick="{{ onPlanSend }}" style="width:42px;height:42px;flex:none;cursor:pointer;border:none;border-radius:999px;background:{{ accent }};color:#fff;font-size:19px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">↑</button>
+          </div>
+        </section>
+      </sc-if>
+
+      <!-- ============ LIBRARY ============ -->
+      <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:1000px">
+          <sc-if value="{{ hasPick }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:12px;background:{{ deep }};color:#fff;border-radius:{{ rad }};padding:13px 18px;margin-bottom:18px">
+              <span style="width:8px;height:8px;border-radius:999px;background:#fff;flex:none"></span>
+              <span style="flex:1;font-weight:700;font-size:14px">{{ pickBanner }}</span>
+              <button onClick="{{ onClearPick }}" style="cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.18);border:none;border-radius:999px;padding:6px 13px">Cancel</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasFlash }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:11px;background:{{ soft }};border:1px solid {{ tint }};border-radius:{{ rad }};padding:13px 18px;margin-bottom:18px">
+              <span style="width:20px;height:20px;border-radius:999px;background:{{ accent }};color:#fff;font-weight:800;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none">✓</span>
+              <span style="font-size:13.5px;font-weight:600;color:{{ deep }}">{{ flash }}</span>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:13px">
+            <span style="flex:1;display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid oklch(0.9 0.006 220);border-radius:999px;padding:0 16px">
+              <span style="color:oklch(0.62 0.01 230);font-size:16px">⌕</span>
+              <input value="{{ recipeQuery }}" onChange="{{ onRecipeQuery }}" placeholder="Search recipes, ingredients, or tags — e.g. tofu, high fiber, omega-3" style="flex:1;font:inherit;font-size:14px;padding:12px 0;border:none;outline:none;background:none" />
+            </span>
+          </div>
+
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
+            <sc-for list="{{ dietChips }}" as="c" hint-placeholder-count="2">
+              <button onClick="{{ c.onClick }}" style="cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;color:{{ c.fg }};background:{{ c.bg }};border:1.5px solid {{ c.bd }};border-radius:999px;padding:7px 14px">{{ c.label }}</button>
+            </sc-for>
+            <span style="width:1px;background:oklch(0.9 0.006 220);margin:2px 4px"></span>
+            <sc-for list="{{ slotChips }}" as="c" hint-placeholder-count="5">
+              <button onClick="{{ c.onClick }}" style="cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;color:{{ c.fg }};background:{{ c.bg }};border:1.5px solid {{ c.bd }};border-radius:999px;padding:7px 13px">{{ c.label }}</button>
+            </sc-for>
+          </div>
+          <div style="font-size:12.5px;color:oklch(0.58 0.01 230);font-family:'Spline Sans Mono',monospace;margin-bottom:16px">{{ libCount }}</div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+            <sc-for list="{{ libRecipes }}" as="r" hint-placeholder-count="6">
+              <div style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};overflow:hidden;display:flex;flex-direction:column">
+                <div style="height:104px;background-image:repeating-linear-gradient(135deg,{{ tint }} 0 14px,{{ soft }} 14px 28px);position:relative;display:flex;align-items:flex-start;justify-content:space-between;padding:11px">
+                  <span style="font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:{{ deep }};background:rgba(255,255,255,.85);padding:4px 9px;border-radius:999px;font-family:'Spline Sans Mono',monospace">{{ r.slot }}</span>
+                  <sc-if value="{{ r.veganShow }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:10.5px;font-weight:800;color:#fff;background:oklch(0.55 0.11 150);padding:4px 9px;border-radius:999px">{{ r.veganBadge }}</span>
+                  </sc-if>
+                </div>
+                <div style="padding:15px;display:flex;flex-direction:column;flex:1">
+                  <div style="font-weight:800;font-size:15.5px;line-height:1.2;margin-bottom:8px">{{ r.name }}</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px">
+                    <sc-for list="{{ r.tags }}" as="tg" hint-placeholder-count="2">
+                      <span style="font-size:11px;font-weight:600;color:{{ deep }};background:{{ tint }};padding:3px 9px;border-radius:999px">{{ tg }}</span>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;gap:10px;font-family:'Spline Sans Mono',monospace;font-size:11.5px;color:oklch(0.5 0.01 230);margin-bottom:14px;margin-top:auto">
+                    <span>{{ r.kcal }}</span><span style="color:{{ accent }};font-weight:600">{{ r.fiber }}</span><span>{{ r.time }}</span>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button onClick="{{ r.onView }}" style="flex:none;cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:{{ deep }};background:#fff;border:1.5px solid oklch(0.91 0.006 220);border-radius:10px;padding:9px 14px">View</button>
+                    <button onClick="{{ r.onPick }}" style="flex:1;cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:#fff;background:{{ accent }};border:none;border-radius:10px;padding:9px 14px">{{ r.pickLabel }}</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:50px 20px;color:oklch(0.55 0.01 230)">
+              <div style="font-size:15px;font-weight:700;margin-bottom:5px">No recipes match that</div>
+              <div style="font-size:13.5px">Try a different word, or clear the diet/meal filters above.</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ============ RECIPE ============ -->
+      <sc-if value="{{ isRecipe }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:22px;max-width:980px">
+          <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};overflow:hidden">
+            <div style="display:flex;gap:0;flex-wrap:wrap">
+              <div style="flex:1;min-width:240px;min-height:200px;background-image:repeating-linear-gradient(135deg,{{ tint }} 0 14px,{{ soft }} 14px 28px);display:flex;align-items:flex-end;padding:16px">
+                <span style="font-family:'Spline Sans Mono',monospace;font-size:11px;background:rgba(255,255,255,.8);padding:4px 8px;border-radius:6px;color:oklch(0.45 0.01 230)">{{ rec.img }}</span>
+              </div>
+              <div style="flex:1.4;min-width:280px;padding:24px">
+                <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;color:{{ accent }};font-family:'Spline Sans Mono',monospace">{{ rec.slot }}</div>
+                <h1 style="margin:6px 0 10px;font-size:26px;font-weight:800;letter-spacing:-0.02em;line-height:1.1">{{ rec.name }}</h1>
+                <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">
+                  <sc-for list="{{ rec.tags }}" as="tg" hint-placeholder-count="3">
+                    <span style="font-size:12px;font-weight:600;color:{{ deep }};background:{{ tint }};padding:5px 11px;border-radius:999px">{{ tg }}</span>
+                  </sc-for>
+                </div>
+                <div style="font-family:'Spline Sans Mono',monospace;font-size:12.5px;color:oklch(0.5 0.01 230);margin-bottom:14px">{{ rec.time }} · serves {{ rec.servings }}</div>
+                <p style="margin:0;font-size:14px;line-height:1.5;color:oklch(0.4 0.015 235)">{{ rec.note }}</p>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:0;border-top:1px solid oklch(0.94 0.006 220);background:{{ soft }}">
+              <sc-for list="{{ rec.perServing }}" as="n" hint-placeholder-count="5">
+                <div style="flex:1;text-align:center;padding:14px 6px;border-right:1px solid oklch(0.94 0.006 220)">
+                  <div style="font-family:'Spline Sans Mono',monospace;font-size:19px;font-weight:700;color:{{ n.color }}">{{ n.val }}</div>
+                  <div style="font-size:11px;color:oklch(0.55 0.01 230);font-weight:600;margin-top:2px">{{ n.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:8px 24px 14px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 0 4px">
+              <h2 style="margin:0;font-size:17px;font-weight:800">Ingredients</h2>
+              <span style="font-size:12.5px;color:oklch(0.55 0.01 230)">Tap a line to choose the product that fills it</span>
+            </div>
+
+            <sc-for list="{{ rec.lines }}" as="ln" hint-placeholder-count="6">
+              <div style="border-top:1px solid oklch(0.94 0.006 220)">
+                <button onClick="{{ ln.onToggle }}" style="display:flex;align-items:center;gap:14px;width:100%;background:none;border:none;cursor:pointer;padding:15px 4px;font:inherit;text-align:left">
+                  <span style="font-family:'Spline Sans Mono',monospace;font-size:13px;font-weight:600;color:{{ deep }};min-width:66px">{{ ln.qty }}</span>
+                  <span style="font-size:16px;font-weight:700;flex:1">{{ ln.label }}</span>
+                  <span style="font-size:12.5px;color:oklch(0.52 0.01 230);text-align:right">{{ ln.selSummary }}</span>
+                  <span style="font-size:13px;color:{{ accent }};font-weight:800;width:16px;text-align:center">{{ ln.caret }}</span>
+                </button>
+                <sc-if value="{{ ln.open }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:2px 0 18px">
+                    <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;color:oklch(0.58 0.01 230);font-family:'Spline Sans Mono',monospace;margin-bottom:10px">Fills this with</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:10px">
+                      <sc-for list="{{ ln.options }}" as="op" hint-placeholder-count="3">
+                        <button onClick="{{ op.onSelect }}" style="text-align:left;cursor:pointer;font:inherit;border:1.5px solid {{ op.bd }};background:{{ op.bg }};border-radius:{{ rad }};padding:13px">
+                          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+                            <span style="font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:{{ op.storeColor }};font-family:'Spline Sans Mono',monospace">{{ op.store }}</span>
+                            <span style="font-size:10.5px;font-weight:700;color:{{ op.tagColor }}">{{ op.tag }}</span>
+                          </div>
+                          <div style="font-weight:700;font-size:14px;line-height:1.25">{{ op.brand }}</div>
+                          <div style="font-size:12px;color:oklch(0.55 0.01 230);margin:3px 0 9px">{{ op.size }} · {{ op.priceLabel }}</div>
+                          <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:'Spline Sans Mono',monospace;font-size:11px;color:oklch(0.45 0.01 230);border-top:1px dashed oklch(0.9 0.006 220);padding-top:8px">
+                            <span>{{ op.nk }} kcal</span><span>P{{ op.np }}</span><span>C{{ op.nc }}</span><span style="color:{{ op.fibColor }};font-weight:600">fib {{ op.nf }}</span>
+                          </div>
+                          <div style="font-size:11px;color:oklch(0.55 0.01 230);margin-top:5px">{{ op.note }}</div>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+      </sc-if>
+
+      <!-- ============ SHOPPING ============ -->
+      <sc-if value="{{ isShop }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:760px">
+          <div style="background:{{ soft }};border:1px solid {{ tint }};border-radius:{{ rad }};padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="width:8px;height:8px;border-radius:999px;background:{{ accent }};flex:none"></span>
+            <span style="font-size:13.5px">{{ shopNote }}</span>
+          </div>
+
+          <sc-for list="{{ groups }}" as="g" hint-placeholder-count="4">
+            <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};margin-bottom:14px;overflow:hidden">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 18px;background:{{ soft }};border-bottom:1px solid oklch(0.94 0.006 220)">
+                <span style="font-weight:800;font-size:14px;color:{{ deep }}">{{ g.store }}</span>
+                <span style="font-family:'Spline Sans Mono',monospace;font-size:13px;color:oklch(0.5 0.01 230)">{{ g.subtotal }} · {{ g.count }} items</span>
+              </div>
+              <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+                <button onClick="{{ it.onCheck }}" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;font:inherit;background:none;border:none;border-top:1px solid oklch(0.96 0.004 220);padding:13px 18px">
+                  <span style="width:21px;height:21px;border-radius:6px;border:2px solid {{ it.boxBd }};background:{{ it.boxBg }};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">{{ it.mark }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="font-weight:700;font-size:14.5px;color:{{ it.textColor }};text-decoration:{{ it.strike }}">{{ it.brand }}</span>
+                    <span style="display:block;font-size:12px;color:oklch(0.58 0.01 230)">{{ it.size }} · {{ it.fills }}</span>
+                  </span>
+                  <span style="display:flex;flex:none">
+                    <sc-for list="{{ it.whoDots }}" as="w" hint-placeholder-count="2">
+                      <span title="for" style="width:20px;height:20px;border-radius:999px;background:{{ w.color }};color:#fff;font-weight:800;font-size:9px;display:inline-flex;align-items:center;justify-content:center;border:2px solid #fff;margin-left:-6px">{{ w.initials }}</span>
+                    </sc-for>
+                  </span>
+                  <span style="font-family:'Spline Sans Mono',monospace;font-size:12px;color:oklch(0.55 0.01 230);text-align:right;min-width:64px">{{ it.meals }}</span>
+                  <span style="font-family:'Spline Sans Mono',monospace;font-size:13.5px;font-weight:600;color:{{ it.textColor }};min-width:52px;text-align:right">{{ it.priceLabel }}</span>
+                </button>
+              </sc-for>
+            </section>
+          </sc-for>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;background:{{ deep }};color:#fff;border-radius:{{ rad }};padding:16px 22px;margin-top:18px">
+            <span style="font-weight:700;font-size:15px">Estimated weekly total</span>
+            <span style="font-family:'Spline Sans Mono',monospace;font-size:22px;font-weight:700">{{ shopTotal }}</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ COACH ============ -->
+      <sc-if value="{{ isCoach }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;align-items:start;max-width:1060px">
+
+          <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};display:flex;flex-direction:column;height:660px;overflow:hidden">
+            <header style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid oklch(0.94 0.006 220)">
+              <span style="width:38px;height:38px;border-radius:999px;background:{{ tint }};display:inline-flex;align-items:center;justify-content:center;flex:none">
+                <span style="width:13px;height:13px;border-radius:999px;background:{{ accent }}"></span>
+              </span>
+              <div style="line-height:1.25;flex:1">
+                <div style="font-weight:800;font-size:15px">Coach</div>
+                <div style="font-size:12px;color:oklch(0.58 0.01 230)"><span style="color:{{ accent }};font-weight:700">●</span> Science-forward · here all week</div>
+              </div>
+            </header>
+
+            <div data-harbor-thread="1" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:13px">
+              <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="5">
+                <div style="align-self:{{ msg.align }};max-width:82%;display:flex;flex-direction:column">
+                  <div style="background:{{ msg.bg }};color:{{ msg.fg }};border:{{ msg.border }};border-radius:{{ msg.radius }};padding:11px 14px;font-size:14px;line-height:1.5">{{ msg.text }}</div>
+                  <sc-if value="{{ msg.citeShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-family:'Spline Sans Mono',monospace;font-size:10.5px;color:oklch(0.58 0.01 230);margin:5px 2px 0">{{ msg.citeText }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;gap:7px;flex-wrap:wrap;padding:10px 16px 0">
+              <sc-for list="{{ quickPrompts }}" as="q" hint-placeholder-count="4">
+                <button onClick="{{ q.onClick }}" style="cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;color:{{ deep }};background:{{ soft }};border:1px solid {{ tint }};border-radius:999px;padding:7px 13px">{{ q.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;gap:9px;align-items:center;padding:13px 16px 16px">
+              <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="Tell your coach how it's going…" style="flex:1;font:inherit;font-size:14px;padding:11px 15px;border:1.5px solid oklch(0.9 0.006 220);border-radius:999px;outline:none;background:oklch(0.99 0.003 220)" />
+              <button onClick="{{ onSend }}" style="width:42px;height:42px;flex:none;cursor:pointer;border:none;border-radius:999px;background:{{ accent }};color:#fff;font-size:19px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">↑</button>
+            </div>
+          </section>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:20px">
+              <h3 style="margin:0 0 16px;font-size:15px;font-weight:800">Goals &amp; measurements</h3>
+              <sc-for list="{{ measurements }}" as="m" hint-placeholder-count="4">
+                <div style="margin-bottom:15px">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline">
+                    <span style="font-size:13px;color:oklch(0.5 0.01 230);font-weight:600">{{ m.label }}</span>
+                    <span style="font-family:'Spline Sans Mono',monospace;font-size:15px;font-weight:700;color:{{ deep }}">{{ m.val }}</span>
+                  </div>
+                  <sc-if value="{{ m.hasBar }}" hint-placeholder-val="{{ false }}">
+                    <div style="height:7px;border-radius:999px;background:oklch(0.94 0.006 220);overflow:hidden;margin:7px 0 4px">
+                      <div style="height:100%;width:{{ m.pct }};background:{{ accent }};border-radius:999px"></div>
+                    </div>
+                  </sc-if>
+                  <div style="font-size:11.5px;color:oklch(0.6 0.01 230);margin-top:3px">{{ m.sub }}</div>
+                </div>
+              </sc-for>
+            </section>
+
+            <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:20px">
+              <h3 style="margin:0 0 14px;font-size:15px;font-weight:800">This week's priorities</h3>
+              <sc-for list="{{ coachMini }}" as="c" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid oklch(0.96 0.004 220)">
+                  <span style="width:9px;height:9px;border-radius:999px;background:{{ c.dot }};flex:none"></span>
+                  <span style="flex:1;font-size:13.5px;font-weight:600">{{ c.title }}</span>
+                  <span style="font-size:11px;font-weight:700;color:{{ c.dot }}">{{ c.status }}</span>
+                </div>
+              </sc-for>
+              <p style="margin:14px 0 0;font-size:10.5px;color:oklch(0.62 0.01 230);font-style:italic;line-height:1.5">General wellness guidance, not medical advice — screening timing, especially with family history, is a conversation for your physician.</p>
+            </section>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ NUTRITIONIST REVIEW ============ -->
+      <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:980px">
+          <div style="display:flex;align-items:flex-start;gap:14px;background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:18px 20px;margin-bottom:18px">
+            <span style="width:42px;height:42px;border-radius:999px;background:{{ tint }};color:{{ deep }};font-weight:800;font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex:none;font-family:'Spline Sans Mono',monospace">RD</span>
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:15px;margin-bottom:3px">Harbor Nutritionist <span style="font-size:12px;font-weight:600;color:oklch(0.58 0.01 230)">· registered-dietitian agent</span></div>
+              <p style="margin:0;font-size:13.5px;line-height:1.55;color:oklch(0.4 0.015 235)">{{ reviewOverview }}</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px;flex:none">
+              <button onClick="{{ onReanalyze }}" style="cursor:pointer;font:inherit;font-size:12px;font-weight:700;color:{{ deep }};background:{{ soft }};border:1px solid {{ tint }};border-radius:999px;padding:7px 13px">↻ Re-analyze</button>
+              <button onClick="{{ onDiscussCoach }}" style="cursor:pointer;font:inherit;font-size:12px;font-weight:700;color:#fff;background:{{ accent }};border:none;border-radius:999px;padding:7px 13px">Bring into coach chat</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+            <sc-for list="{{ reviewPeople }}" as="p" hint-placeholder-count="2">
+              <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:18px">
+                <div style="display:flex;align-items:center;gap:11px;margin-bottom:4px">
+                  <span style="width:32px;height:32px;border-radius:999px;background:{{ p.avBg }};color:#fff;font-weight:800;font-size:13px;display:inline-flex;align-items:center;justify-content:center;flex:none">{{ p.initials }}</span>
+                  <div style="line-height:1.2;flex:1">
+                    <div style="font-weight:800;font-size:15px">{{ p.name }}</div>
+                    <div style="font-size:11.5px;font-weight:600;color:{{ p.deep }}">{{ p.mode }}</div>
+                  </div>
+                </div>
+                <div style="font-family:'Spline Sans Mono',monospace;font-size:11.5px;color:oklch(0.5 0.01 230);margin-bottom:3px">{{ p.summary }}</div>
+                <div style="font-size:11.5px;font-weight:600;color:oklch(0.55 0.01 230);margin-bottom:14px">{{ p.scoreLine }}</div>
+
+                <sc-for list="{{ p.findings }}" as="f" hint-placeholder-count="4">
+                  <div style="border-top:1px solid oklch(0.95 0.004 220);padding:13px 0">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                      <span style="width:9px;height:9px;border-radius:999px;background:{{ f.sevColor }};flex:none"></span>
+                      <span style="flex:1;font-weight:700;font-size:14px">{{ f.title }}</span>
+                      <span style="font-size:10px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;color:{{ f.sevColor }};background:{{ f.sevTint }};padding:3px 8px;border-radius:999px;white-space:nowrap">{{ f.sevLabel }}</span>
+                    </div>
+                    <p style="margin:0;font-size:13px;line-height:1.5;color:oklch(0.4 0.015 235)">{{ f.body }}</p>
+                    <sc-if value="{{ f.citeShow }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'Spline Sans Mono',monospace;font-size:10.5px;color:oklch(0.58 0.01 230);margin-top:6px">{{ f.cite }}</div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </section>
+            </sc-for>
+          </div>
+
+          <section style="background:#fff;border:1px solid oklch(0.93 0.006 220);border-radius:{{ rad }};padding:18px;margin-top:14px">
+            <h3 style="margin:0 0 6px;font-size:15px;font-weight:800">For the household</h3>
+            <sc-for list="{{ reviewHouse }}" as="f" hint-placeholder-count="3">
+              <div style="border-top:1px solid oklch(0.95 0.004 220);padding:13px 0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                  <span style="width:9px;height:9px;border-radius:999px;background:{{ f.sevColor }};flex:none"></span>
+                  <span style="flex:1;font-weight:700;font-size:14px">{{ f.title }}</span>
+                  <span style="font-size:10px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;color:{{ f.sevColor }};background:{{ f.sevTint }};padding:3px 8px;border-radius:999px;white-space:nowrap">{{ f.sevLabel }}</span>
+                </div>
+                <p style="margin:0;font-size:13px;line-height:1.5;color:oklch(0.4 0.015 235)">{{ f.body }}</p>
+                <sc-if value="{{ f.citeShow }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-family:'Spline Sans Mono',monospace;font-size:10.5px;color:oklch(0.58 0.01 230);margin-top:6px">{{ f.cite }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </section>
+
+          <p style="margin:20px 0 0;font-size:11.5px;color:oklch(0.6 0.01 230);font-style:italic;max-width:680px">Educational guidance from an automated review of your plan — not a substitute for a registered dietitian or physician, particularly for supplements and family-history risk.</p>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  state = { theme:'a', screen:'plan', activeDay:3, openRecipe:'bowl', openLine:'lentils', checked:{},
+    selected:{ lentils:'lentils.wf', kale:'kale.tg', quinoa:'quinoa.tj', feta:'feta.wf', salmon:'salmon.ks',
+      broccoli:'broccoli.tj', oats:'oats.wf', berries:'berries.tj', walnuts:'walnuts.tj', chia:'chia.wf',
+      almondmilk:'almondmilk.tj', oliveoil:'oliveoil.tj', lemon:'lemon.wf',
+      cucumber:'cucumber.garden', whitebeans:'whitebeans.tj', dill:'dill.garden',
+      tofu:'tofu.tj', spinach:'spinach.tg', tempeh:'tempeh.wf', chickpeas:'chickpeas.tj', coconutmilk:'coconutmilk.tj' },
+    planPerson:'j', days:{}, planDraft:'',
+    recipeQuery:'', recipeDiet:'all', recipeSlot:'all', picking:null, flash:null,
+    draft:'', messages: this.seedMsgs() };
+
+  startPickChange(momentId, viewer, isShared){
+    this.setState({screen:'library', picking:{day:this.state.activeDay, kind:'change', momentId, viewer, person: isShared?'both':viewer}, recipeQuery:'', recipeDiet: viewer==='m'?'vegan':'all', recipeSlot:'all', flash:null});
+  }
+  startPickAdd(viewer){
+    this.setState({screen:'library', picking:{day:this.state.activeDay, kind:'add', viewer, person:viewer}, recipeQuery:'', recipeDiet: viewer==='m'?'vegan':'all', recipeSlot:'all', flash:null});
+  }
+  selectRecipe(rid){
+    const p=this.state.picking, r=this._d.recipes[rid];
+    if(p && p.kind==='change'){
+      this.setMomentRecipe(p.day, p.momentId, p.person, rid);
+      this.setState({screen:'plan', picking:null, flash:null});
+    } else if(p && p.kind==='add'){
+      this.addMeal(p.day, p.viewer, rid, r.slot);
+      this.setState({screen:'plan', picking:null, flash:null});
+    } else {
+      this.addMeal(this.state.activeDay, this.state.planPerson, rid, r.slot);
+      const who = this.state.planPerson==='m' ? 'Mara' : 'you';
+      this.setState({flash:'Added “'+r.name+'” to '+who+'\u2019s day on '+this._dayLabel(this.state.activeDay)+'.'});
+    }
+  }
+  _dayLabel(i){ return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]+' '+[15,16,17,18,19,20,21][i]; }
+
+  MEM(){
+    return {
+      j:{ id:'j', name:'Jordan', short:'You', initials:'J', diet:'Omnivore' },
+      m:{ id:'m', name:'Mara', short:'Mara', initials:'M', diet:'Vegan' }
+    };
+  }
+  defaultDay(){
+    return [
+      {id:'b',  label:'Breakfast',       mode:'shared',   shared:'oats',          j:'oats',   m:'oats'},
+      {id:'ms', label:'Morning snack',   mode:'separate', shared:'chia',          j:null,     m:'chia'},
+      {id:'l',  label:'Lunch',           mode:'separate', shared:'tempehbowl',    j:'bowl',   m:'tempehbowl'},
+      {id:'as', label:'Afternoon snack', mode:'separate', shared:'chia',          j:null,     m:'chia'},
+      {id:'d',  label:'Dinner',          mode:'separate', shared:'chickpeacurry', j:'salmon', m:'chickpeacurry'},
+      {id:'es', label:'Evening snack',   mode:'shared',   shared:'chia',          j:'chia',   m:'chia'}
+    ];
+  }
+  getDay(day){ return (this.state.days && this.state.days[day]) ? this.state.days[day] : this.defaultDay(); }
+  cloneDay(arr){ return arr.map(mo=>Object.assign({}, mo)); }
+  writeDay(st, day, arr){ return { days: Object.assign({}, st.days, { [day]: arr }) }; }
+  participates(mo, person){ return mo.mode==='shared' || mo[person]!=null; }
+  ridIn(mo, person){ return mo.mode==='shared' ? mo.shared : mo[person]; }
+  mealsFor(person, day){
+    return this.getDay(day).filter(mo=>this.participates(mo, person))
+      .map(mo=>({ id:mo.id, label:mo.label, rid:this.ridIn(mo, person), shared:mo.mode==='shared' }));
+  }
+  sumNutr(person, day){
+    const t = {kcal:0,protein:0,carbs:0,fat:0,fiber:0};
+    this.mealsFor(person, day).forEach(m => { if(!m.rid) return; const n=this.recNutr(m.rid); t.kcal+=n.kcal; t.protein+=n.protein; t.carbs+=n.carbs; t.fat+=n.fat; t.fiber+=n.fiber; });
+    t.fiber = Math.round(t.fiber*10)/10;
+    return t;
+  }
+  setMomentRecipe(day, id, person, rid){
+    this.setState(st => {
+      const arr = this.cloneDay(this.getDay(day)).map(mo => {
+        if(mo.id!==id) return mo;
+        if(person==='both'){ mo.mode='shared'; mo.shared=rid; mo.j=rid; mo.m=rid; }
+        else { mo.mode='separate'; mo[person]=rid; }
+        return mo;
+      });
+      return this.writeDay(st, day, arr);
+    });
+  }
+  toggleTogether(day, id, viewer){
+    this.setState(st => {
+      const arr = this.cloneDay(this.getDay(day)).map(mo => {
+        if(mo.id!==id) return mo;
+        if(mo.mode==='shared'){ const r=mo.shared; mo.mode='separate'; mo.j=r; mo.m=r; }
+        else { const r=mo[viewer] || mo.shared; mo.mode='shared'; mo.shared=r; mo.j=r; mo.m=r; }
+        return mo;
+      });
+      return this.writeDay(st, day, arr);
+    });
+  }
+  removeMeal(day, id, viewer){
+    this.setState(st => {
+      let arr = this.cloneDay(this.getDay(day)).map(mo => {
+        if(mo.id!==id) return mo;
+        if(mo.mode==='shared'){ const other = viewer==='j'?'m':'j'; mo.mode='separate'; mo[other]=mo.shared; mo[viewer]=null; }
+        else { mo[viewer]=null; }
+        return mo;
+      }).filter(mo => mo.mode==='shared' || mo.j!=null || mo.m!=null);
+      return this.writeDay(st, day, arr);
+    });
+  }
+  addMeal(day, viewer, rid, label){
+    this.setState(st => {
+      const arr = this.cloneDay(this.getDay(day));
+      const id = 'x'+Date.now().toString(36)+Math.floor(Math.random()*1000);
+      arr.push({ id, label: label||'Snack', mode:'separate', shared:rid, j: viewer==='j'?rid:null, m: viewer==='m'?rid:null });
+      return this.writeDay(st, day, arr);
+    });
+  }
+
+  personTargets(person, day){
+    const isRun = [1,3,5].indexOf(day)>=0;
+    if(person==='j') return isRun
+      ? {kcal:2200,protein:145,carbs:250,fat:62,fiber:30,mode:'Run day'}
+      : {kcal:1850,protein:140,carbs:165,fat:60,fiber:30,mode:'Rest day'};
+    return {kcal:1850,protein:95,carbs:230,fat:55,fiber:38,mode:'Vegan maintenance'};
+  }
+  nutritionReview(day){
+    const out = {};
+    ['j','m'].forEach(p=>{
+      const n=this.sumNutr(p,day), t=this.personTargets(p,day), f=[];
+      // protein
+      if(n.protein < t.protein*0.85) f.push({sev:'tweak', title:'Protein is running low', body:'Planned ~'+n.protein+'g against a ~'+t.protein+'g target. '+(p==='j'?'After 40, a runner losing fat wants 1.6–2.0 g/kg to preserve muscle — fold in Greek yogurt, eggs, cottage cheese, or a shake.':'Lean harder on tempeh, tofu, edamame, lentils and soy milk to reach vegan protein needs across your 6 meals.'), cite:p==='j'?'Morton et al., Br J Sports Med 2018':'Melina et al., J Acad Nutr Diet 2016'});
+      else f.push({sev:'good', title:'Protein on track (~'+n.protein+'g)', body:'Enough to support recovery and keep you full between meals.', cite:null});
+      // fiber
+      if(n.fiber >= t.fiber) f.push({sev:'good', title:'Fiber goal cleared ('+n.fiber+'g)', body:'Strong for colon health and steady energy. Ramp up gradually and hydrate well — especially before runs — to avoid GI upset.', cite:'Aune et al., BMJ 2011'});
+      else f.push({sev:'tweak', title:'A little short on fiber ('+n.fiber+'g / '+t.fiber+'g)', body:'Add beans, berries, chia, or an extra veg-forward meal to close the gap.', cite:'Aune et al., BMJ 2011'});
+      // person-specific
+      if(p==='m'){
+        f.push({sev:'watch', title:'Lock in a B12 source', body:'A fully plant-based plan has no reliable B12. Use a daily or weekly supplement, or consistently fortified foods (nutritional yeast, fortified plant milk) — this is non-negotiable long-term.', cite:'Melina et al., J Acad Nutr Diet 2016'});
+        f.push({sev:'watch', title:'Help iron absorb', body:'Non-heme iron from tofu, tempeh and spinach absorbs far better with vitamin C — add citrus, peppers, or tomatoes to those meals, and keep coffee/tea between meals rather than with them.', cite:'Hurrell & Egli, Am J Clin Nutr 2010'});
+        f.push({sev:'tweak', title:'Cover omega-3 without fish', body:'Get ALA daily from chia, ground flax and walnuts, and consider an algae-based DHA/EPA supplement for the forms fish would normally provide.', cite:'Melina et al., J Acad Nutr Diet 2016'});
+      } else {
+        f.push({sev:'good', title:'Omega-3s well covered', body:'Two salmon dinners plus walnuts support cognitive aging and heart health — a smart hedge against your Alzheimer’s/Parkinson’s concerns.', cite:'Fish, ALA & cognition — cohort findings'});
+        f.push({sev:'good', title:'Colon-smart pattern', body:'High fiber, cruciferous veg, and little red/processed meat line up with prevention guidance — worth pairing with on-time screening given your family history.', cite:'American Cancer Society, 2024'});
+      }
+      out[p]=f;
+    });
+    out.house=[
+      {sev:'tweak', title:'Vary the snacks', body:'Chia pudding repeats often — rotate in fruit + nuts, hummus + veg, or edamame to broaden the micronutrient base and avoid palate fatigue.', cite:null},
+      {sev:'watch', title:'Rinse canned beans', body:'Canned chickpeas and cannellini are convenient but salty — draining and rinsing cuts sodium by roughly 40%.', cite:'Jones et al., sodium in canned legumes'},
+      {sev:'good', title:'Shared meals keep it sustainable', body:'Eating breakfast and an evening snack together makes the plan realistic while still protecting each of your separate goals.', cite:null}
+    ];
+    return out;
+  }
+  sendReviewToCoach(){
+    const msg = {role:'coach', text:"I went over both plans as your nutritionist. Top priorities: lock in a daily B12 source for Mara, lift protein on your rest days, and pair Mara’s iron-rich meals with a little vitamin C. Want me to adjust this week’s meals to handle these?", cite:'Plan review · evidence-based'};
+    this.setState(st=>({screen:'coach', messages:[...st.messages, msg]}), ()=>this.scrollThread());
+  }
+
+  seedMsgs(){
+    return [
+      {role:'coach', text:"Morning, Jordan. Today's a run day, so I've front-loaded carbs in your oats and bowl. How are you feeling — and how did the run go?", cite:null},
+      {role:'me', text:"Did my 5-miler this morning. Felt sluggish the last mile."},
+      {role:'coach', text:"That end-of-run fade usually points to low glycogen. Try 30\u201340g of easy carbs 60\u201390 min before \u2014 a banana or toast with honey \u2014 and protect your sleep, which has an outsized effect on perceived effort. I'll nudge tomorrow's breakfast carbs up a touch.", cite:"Carb timing \u2014 Thomas et al., ACSM position stand 2016"},
+      {role:'me', text:"Good to know. Also heads up \u2014 Sunday I'm at my parents', so no meal planning that day."},
+      {role:'coach', text:"Got it \u2014 I'll skip Sunday's plan and drop those items from your shopping list. Want me to spread Sunday's protein and fiber across Saturday and Monday so your weekly averages still hold?", cite:null}
+    ];
+  }
+
+  planReply(text){
+    const t=(text||'').toLowerCase();
+    if(/cucumber|garden|zucchini|tomato|squash|we have|lots of|leftover|use up|on hand|fridge|surplus|grow/.test(t))
+      return { text:"Love cooking around what you've got. I've swapped this day's lunch to a Smashed Cucumber & White Bean Salad \u2014 it leans on your garden cucumbers, adds 12g fiber and plant protein, and keeps you under your rest-day calorie target. Want me to work the surplus into another day this week too?", cite:"Fiber & satiety \u2014 Slavin, Nutrients 2013", swap:{slot:'Lunch', recipe:'cukesalad'} };
+    if(/swap|different|change|replace|something else|don't want|not feeling|bored/.test(t))
+      return { text:"Sure \u2014 tell me which meal and any constraint (quicker, higher protein, vegetarian, uses an ingredient you have) and I'll propose two options that still hit the day's calories and 30g fiber.", cite:null };
+    if(/veg|vegan|meatless|plant|no meat/.test(t))
+      return { text:"Easy \u2014 I can make this day plant-forward while protecting your protein target with beans, tofu, or Greek yogurt. Want me to convert the whole day, or just one meal?", cite:null };
+    return { text:"Got it \u2014 I'll factor that into this day's plan. I can swap meals, plan around ingredients you already have, or rebalance macros for a run vs rest day. What would help most?", cite:null };
+  }
+
+  sendPlan(text){
+    text=(text||'').trim(); if(!text) return;
+    const r=this.planReply(text);
+    this.setState(st=>{
+      const next={ messages:[...st.messages,{role:'me',text},{role:'coach',text:r.text,cite:r.cite}], planDraft:'' };
+      if(r.swap){
+        const day=st.activeDay;
+        const viewer = st.planPerson || 'j';
+        // swap the viewed person's matching meal (by label) to the suggested recipe
+        const arr = this.cloneDay(this.getDay(day)).map(mo=>{
+          if(mo.label!==r.swap.slot || !this.participates(mo, viewer)) return mo;
+          if(mo.mode==='shared'){ const o=viewer==='j'?'m':'j'; mo.mode='separate'; mo[o]=mo.shared; }
+          mo[viewer]=r.swap.recipe;
+          return mo;
+        });
+        Object.assign(next, this.writeDay(st, day, arr));
+      }
+      return next;
+    }, ()=>this.scrollThread());
+  }
+
+  coachReply(text){
+    const t = (text||'').toLowerCase();
+    if(/(sunday|monday|tuesday|wednesday|thursday|friday|saturday|parent|travel|away|out of town|skip|eating out|restaurant|dinner with)/.test(t))
+      return { text:"Done \u2014 I'll skip that day's plan and remove its items from your shopping list. I can redistribute the protein and fiber across the surrounding days so your weekly targets hold. If you can, aim for a lean-protein + veg option while you're out.", cite:null };
+    if(/(ran|run|jog|mile|workout|tempo|long run|race|pace|legs)/.test(t))
+      return { text:"Nice work logging it. Note how you fuelled and slept \u2014 both drive how a run feels. For tougher efforts, 30\u201340g carbs ~1h before and 7\u20139h sleep make the biggest difference. I'll factor today into this week's carb timing.", cite:"Fueling & sleep \u2014 ACSM, 2016" };
+    if(/(weigh|weight|scale|lb|pound|kg)/.test(t))
+      return { text:"Logged. You're trending down about 0.8 lb/week \u2014 a sustainable rate that protects muscle and running performance. Let's hold calories steady and reassess in two weeks rather than cutting harder.", cite:"Safe loss \u2014 ~0.5\u20131% body weight/week" };
+    if(/(goal|target|fiber|fibre|calorie|carb|macro|protein|adjust)/.test(t))
+      return { text:"Happy to revisit. Your 30g fiber goal is well-supported for colon and metabolic health, so I'd keep that. If weight loss stalls we can trim ~100 kcal on rest days. What feels sustainable for you day to day?", cite:"Fiber & colorectal risk \u2014 Aune et al., BMJ 2011" };
+    if(/(sleep|tired|stress|sore|recover|rest)/.test(t))
+      return { text:"Recovery is where the adaptation happens. Prioritise 7\u20139h sleep and an easy or rest day after hard efforts. I can lighten tomorrow's plan if you're feeling run-down \u2014 just say the word.", cite:"Recovery \u2014 sleep & training adaptation" };
+    return { text:"Thanks for sharing \u2014 that helps me coach you better. Anything about your energy, sleep, or appetite I should factor into this week's plan?", cite:null };
+  }
+
+  scrollThread(){
+    const go=()=>{ const el=document.querySelector('[data-harbor-thread]'); if(el){ el.scrollTop=el.scrollHeight; } };
+    requestAnimationFrame(go); setTimeout(go,80);
+  }
+  componentDidUpdate(prevProps, prevState){
+    if(prevState && prevState.messages && prevState.messages.length !== this.state.messages.length) this.scrollThread();
+  }
+
+  sendText(text){
+    text=(text||'').trim(); if(!text) return;
+    const r=this.coachReply(text);
+    this.setState(st=>({ messages:[...st.messages,{role:'me',text},{role:'coach',text:r.text,cite:r.cite}], draft:'' }), ()=>this.scrollThread());
+  }
+
+  TH(){
+    return {
+      a:{ tag:'A', accent:'oklch(0.64 0.085 195)', deep:'oklch(0.43 0.07 205)', tint:'oklch(0.95 0.03 195)', soft:'oklch(0.975 0.013 200)', rad:'18px' },
+      b:{ tag:'B', accent:'oklch(0.55 0.105 245)', deep:'oklch(0.39 0.085 248)', tint:'oklch(0.95 0.034 245)', soft:'oklch(0.975 0.013 238)', rad:'6px' }
+    };
+  }
+
+  N(kcal,p,c,f,fib,sod){ return {kcal,protein:p,carbs:c,fat:f,fiber:fib,sodium:sod}; }
+  o(id,store,brand,size,price,n,note){ return {id,store,brand,size,price,n,note:note||''}; }
+
+  DATA(){
+    const N=(a,b,c,d,e,f)=>this.N(a,b,c,d,e,f), o=this.o.bind(this);
+    const catalog = {
+      lentils:{ qty:'1 cup', label:'cooked green lentils', options:[
+        o('lentils.d','Default','Generic green lentils','—',null,N(230,18,40,0.8,15,4),'Recipe-book default'),
+        o('lentils.wf','Whole Foods','365 Organic Green Lentils','16 oz dry',2.49,N(230,18,40,0.8,15,4)),
+        o('lentils.tj',"Trader Joe's",'Steamed Lentils','17.6 oz · pre-cooked',2.99,N(210,15,36,1,13,55),'Heat & serve'),
+        o('lentils.on','Online',"Bob's Red Mill Petite Lentils",'27 oz dry',4.79,N(230,18,40,0.8,15,4))
+      ]},
+      kale:{ qty:'2 cups', label:'chopped kale', options:[
+        o('kale.d','Default','Generic kale','—',null,N(67,4,13,1,5,58)),
+        o('kale.wf','Whole Foods','Organic Lacinato Kale','1 bunch',2.99,N(67,4,13,1,5,58)),
+        o('kale.tg','Target','Good & Gather Chopped Kale','16 oz bag',2.49,N(70,4,13,1,5,60),'Pre-washed'),
+        o('kale.ks','King Soopers','Simple Truth Organic Kale','5 oz',2.79,N(67,4,13,1,5,58))
+      ]},
+      quinoa:{ qty:'1/2 cup', label:'cooked quinoa', options:[
+        o('quinoa.d','Default','Generic quinoa','—',null,N(111,4,20,1.8,3,7)),
+        o('quinoa.tj',"Trader Joe's",'Organic Tri-Color Quinoa','16 oz',3.49,N(111,4,20,1.8,3,7)),
+        o('quinoa.wf','Whole Foods','365 White Quinoa','16 oz',4.49,N(111,4,20,1.8,3,7))
+      ]},
+      oliveoil:{ qty:'1 tbsp', label:'extra-virgin olive oil', pantry:true, options:[
+        o('oliveoil.d','Default','Generic EVOO','—',null,N(119,0,0,14,0,0)),
+        o('oliveoil.tj',"Trader Joe's",'Spanish EVOO','16.9 oz',6.99,N(119,0,0,14,0,0)),
+        o('oliveoil.ks','King Soopers','Private Selection EVOO','16.9 oz',9.99,N(119,0,0,14,0,0))
+      ]},
+      feta:{ qty:'1/4 cup', label:'crumbled feta', options:[
+        o('feta.d','Default','Generic feta','—',null,N(100,5,1.5,8,0,320)),
+        o('feta.wf','Whole Foods','365 Crumbled Feta','6 oz',3.99,N(100,5,1.5,8,0,320)),
+        o('feta.tj',"Trader Joe's",'Feta Cheese','8 oz',3.49,N(90,5,1,7,0,300),'Lower sodium')
+      ]},
+      lemon:{ qty:'1 tbsp', label:'lemon juice', pantry:true, options:[
+        o('lemon.d','Default','Generic lemon','—',null,N(4,0,1,0,0,0)),
+        o('lemon.wf','Whole Foods','Organic Lemons','each',0.79,N(4,0,1,0,0,0))
+      ]},
+      cumin:{ qty:'1/2 tsp', label:'ground cumin', pantry:true, options:[
+        o('cumin.d','Default','Generic ground cumin','—',null,N(4,0,0.5,0.2,0.3,2))
+      ]},
+      salmon:{ qty:'6 oz', label:'salmon fillet', options:[
+        o('salmon.d','Default','Generic salmon','—',null,N(350,34,0,22,0,80)),
+        o('salmon.wf','Whole Foods','Wild Sockeye Salmon','per lb',17.99,N(310,40,0,16,0,75),'Wild · leaner'),
+        o('salmon.ks','King Soopers','Atlantic Salmon Fillet','per lb',9.99,N(350,34,0,22,0,80))
+      ]},
+      broccoli:{ qty:'2 cups', label:'broccoli florets', options:[
+        o('broccoli.d','Default','Generic broccoli','—',null,N(110,8,16,4,8,60)),
+        o('broccoli.tj',"Trader Joe's",'Organic Broccoli Florets','12 oz',2.49,N(110,8,16,4,8,60)),
+        o('broccoli.tg','Target','Good & Gather Broccoli','12 oz',1.99,N(110,8,16,4,8,60))
+      ]},
+      oats:{ qty:'1/2 cup', label:'steel-cut oats', options:[
+        o('oats.d','Default','Generic steel-cut oats','—',null,N(150,5,27,2.5,4,0)),
+        o('oats.wf','Whole Foods','365 Steel Cut Oats','24 oz',3.49,N(150,5,27,2.5,4,0)),
+        o('oats.tj',"Trader Joe's",'Steel Cut Oats','30 oz',3.99,N(150,5,27,2.5,4,0))
+      ]},
+      berries:{ qty:'1/2 cup', label:'mixed berries', options:[
+        o('berries.d','Default','Generic berries','—',null,N(40,0.5,10,0.3,4,0)),
+        o('berries.tj',"Trader Joe's",'Frozen Mixed Berries','16 oz',3.49,N(40,0.5,10,0.3,4,0)),
+        o('berries.wf','Whole Foods','365 Organic Blueberries','10 oz',3.99,N(42,0.5,11,0.3,3.5,0))
+      ]},
+      walnuts:{ qty:'1/4 cup', label:'walnuts', options:[
+        o('walnuts.d','Default','Generic walnuts','—',null,N(190,4,4,19,2,0)),
+        o('walnuts.tj',"Trader Joe's",'Walnut Halves & Pieces','16 oz',6.99,N(190,4,4,19,2,0))
+      ]},
+      chia:{ qty:'3 tbsp', label:'chia seeds', options:[
+        o('chia.d','Default','Generic chia seeds','—',null,N(180,6,16,12,14,5)),
+        o('chia.wf','Whole Foods','365 Chia Seeds','12 oz',5.99,N(180,6,16,12,14,5))
+      ]},
+      almondmilk:{ qty:'1 cup', label:'unsweetened almond milk', options:[
+        o('almondmilk.d','Default','Generic almond milk','—',null,N(30,1,1,2.5,1,170)),
+        o('almondmilk.tj',"Trader Joe's",'Unsweetened Almond Beverage','32 oz',2.49,N(30,1,1,2.5,1,150))
+      ]},
+      cucumber:{ qty:'2 cups', label:'cucumbers, smashed', options:[
+        o('cucumber.d','Default','Generic cucumber','—',null,N(30,1.4,7,0.2,2,4)),
+        o('cucumber.garden','Garden','Home-grown cucumbers','from your garden',0,N(30,1.4,7,0.2,2,4),'Using your surplus'),
+        o('cucumber.wf','Whole Foods','Organic Cucumbers','each',0.99,N(30,1.4,7,0.2,2,4))
+      ]},
+      whitebeans:{ qty:'1 can', label:'cannellini beans, drained', options:[
+        o('whitebeans.d','Default','Generic white beans','—',null,N(250,16,45,1,11,20)),
+        o('whitebeans.tj',"Trader Joe's",'Cannellini Beans','15 oz',1.29,N(250,16,45,1,11,20)),
+        o('whitebeans.ks','King Soopers','Simple Truth Organic Cannellini','15 oz',1.49,N(250,16,45,1,11,20))
+      ]},
+      dill:{ qty:'2 tbsp', label:'fresh dill', pantry:true, options:[
+        o('dill.d','Default','Generic fresh dill','—',null,N(4,0.3,0.7,0,0.2,1)),
+        o('dill.garden','Garden','Home-grown dill','from your garden',0,N(4,0.3,0.7,0,0.2,1))
+      ]},
+      tofu:{ qty:'6 oz', label:'firm tofu', options:[
+        o('tofu.d','Default','Generic firm tofu','—',null,N(180,18,4,11,2,15)),
+        o('tofu.tj',"Trader Joe's",'Organic Firm Tofu','16 oz',1.99,N(180,18,4,11,2,15)),
+        o('tofu.wf','Whole Foods','365 Organic Firm Tofu','14 oz',2.29,N(180,18,4,11,2,15))
+      ]},
+      spinach:{ qty:'2 cups', label:'baby spinach', options:[
+        o('spinach.d','Default','Generic spinach','—',null,N(14,2,2,0,1.3,48)),
+        o('spinach.tg','Target','Good & Gather Baby Spinach','10 oz',2.49,N(14,2,2,0,1.3,48)),
+        o('spinach.wf','Whole Foods','Organic Baby Spinach','5 oz',2.99,N(14,2,2,0,1.3,48))
+      ]},
+      tempeh:{ qty:'1 cup', label:'tempeh, cubed', options:[
+        o('tempeh.d','Default','Generic tempeh','—',null,N(320,31,16,18,14,15)),
+        o('tempeh.wf','Whole Foods','Lightlife Organic Tempeh','8 oz',2.99,N(320,31,16,18,14,15)),
+        o('tempeh.ks','King Soopers','Simple Truth Tempeh','8 oz',3.29,N(320,31,16,18,14,15))
+      ]},
+      chickpeas:{ qty:'1 can', label:'chickpeas, drained', options:[
+        o('chickpeas.d','Default','Generic chickpeas','—',null,N(270,15,45,4,12,30)),
+        o('chickpeas.tj',"Trader Joe's",'Garbanzo Beans','15 oz',1.19,N(270,15,45,4,12,30)),
+        o('chickpeas.ks','King Soopers','Simple Truth Organic Chickpeas','15 oz',1.39,N(270,15,45,4,12,30))
+      ]},
+      coconutmilk:{ qty:'1 cup', label:'light coconut milk', options:[
+        o('coconutmilk.d','Default','Generic light coconut milk','—',null,N(150,1.5,3,14,0,30)),
+        o('coconutmilk.tj',"Trader Joe's",'Light Coconut Milk','13.5 oz',1.49,N(150,1.5,3,14,0,30)),
+        o('coconutmilk.wf','Whole Foods','365 Light Coconut Milk','13.5 oz',1.79,N(150,1.5,3,14,0,30))
+      ]}
+    };
+
+    const recipes = {
+      bowl:{ id:'bowl', name:'Lentil & Kale Power Bowl', slot:'Lunch', time:'25 min', servings:2, img:'lentil bowl photo', tags:['High fiber','Plant protein','Folate'], note:'Fiber-forward with folate and plant protein — supports colon health and steady energy for a wt-loss day.', lines:['lentils','kale','quinoa','oliveoil','feta','lemon','cumin'] },
+      salmon:{ id:'salmon', name:'Salmon, Quinoa & Roasted Broccoli', slot:'Dinner', time:'30 min', servings:2, img:'salmon plate photo', tags:['Omega-3','Cruciferous','High protein'], note:'Omega-3s for cognitive aging; cruciferous broccoli adds fiber and colon-protective compounds.', lines:['salmon','broccoli','quinoa','oliveoil','lemon'] },
+      oats:{ id:'oats', name:'Steel-Cut Oats, Berries & Walnuts', slot:'Breakfast', time:'15 min', servings:1, img:'oatmeal bowl photo', tags:['Beta-glucan','Omega-3 (ALA)'], note:'Soluble beta-glucan fiber plus walnut ALA — a brain- and heart-friendly start.', lines:['oats','berries','walnuts'] },
+      chia:{ id:'chia', name:'Vanilla Chia Pudding', slot:'Snack', time:'5 min + chill', servings:1, img:'chia pudding photo', tags:['Fiber','Omega-3 (ALA)'], note:'A make-ahead snack delivering ~14g fiber to help you hit the daily 30g goal.', lines:['chia','almondmilk'] },
+      cukesalad:{ id:'cukesalad', name:'Smashed Cucumber & White Bean Salad', slot:'Lunch', time:'15 min', servings:2, img:'cucumber salad photo', tags:['Garden cucumbers','High fiber','Plant protein'], note:'Built around your garden cucumbers \u2014 crunchy and hydrating, with white beans adding 12g fiber and plant protein to stay full on a rest day.', lines:['cucumber','whitebeans','feta','dill','oliveoil','lemon'] },
+      tofuscramble:{ id:'tofuscramble', name:'Turmeric Tofu Scramble', slot:'Breakfast', time:'15 min', servings:1, img:'tofu scramble photo', vegan:true, tags:['Vegan','High protein','Iron'], note:'A plant-based breakfast with 18g protein plus iron from tofu and spinach \u2014 fortify with nutritional yeast for B12.', lines:['tofu','spinach','oliveoil'] },
+      tempehbowl:{ id:'tempehbowl', name:'Tempeh & Quinoa Green Bowl', slot:'Lunch', time:'25 min', servings:2, img:'tempeh bowl photo', vegan:true, tags:['Vegan','High fiber','Complete protein'], note:'Fermented tempeh gives complete plant protein and gut-friendly fiber over quinoa and kale.', lines:['tempeh','quinoa','kale','oliveoil','lemon'] },
+      chickpeacurry:{ id:'chickpeacurry', name:'Chickpea & Spinach Coconut Curry', slot:'Dinner', time:'30 min', servings:2, img:'chickpea curry photo', vegan:true, tags:['Vegan','High fiber','Iron'], note:'Iron-rich chickpeas and spinach in a light coconut sauce \u2014 12g fiber and hearty with no animal products.', lines:['chickpeas','coconutmilk','spinach','quinoa'] }
+    };
+
+    const weekNeeds = [
+      {key:'oats',meals:5,who:'both'},{key:'berries',meals:5,who:'both'},{key:'chia',meals:4,who:'both'},{key:'almondmilk',meals:4,who:'both'},
+      {key:'lentils',meals:3,who:'j'},{key:'feta',meals:2,who:'j'},{key:'salmon',meals:2,who:'j'},{key:'broccoli',meals:2,who:'j'},{key:'walnuts',meals:1,who:'j'},
+      {key:'tofu',meals:5,who:'m'},{key:'spinach',meals:5,who:'m'},{key:'tempeh',meals:3,who:'m'},{key:'chickpeas',meals:3,who:'m'},{key:'coconutmilk',meals:3,who:'m'},
+      {key:'kale',meals:3,who:'both'},{key:'quinoa',meals:5,who:'both'},
+      {key:'oliveoil',meals:0,who:'both'},{key:'lemon',meals:1,who:'both'},{key:'cumin',meals:0,who:'j'}
+    ];
+
+    const coach = [
+      {title:'Colorectal screening',status:'Action soon',body:'With a family history of colon cancer, guidelines often recommend starting screening before the standard age of 45 — typically 10 years before a relative\u2019s diagnosis. Pair that with a high-fiber, lower-red-meat pattern, which your plan already favors.',cite:'American Cancer Society screening guidance, 2024'},
+      {title:'30g fiber / day',status:'On track',body:'Higher fiber intake is consistently associated with lower colorectal cancer risk — roughly a 10% reduction per additional 10g/day. Your planned meals are designed to clear 30g.',cite:'Aune et al., BMJ 2011 (dose-response meta-analysis)'},
+      {title:'Omega-3 for the brain',status:'On track',body:'Regular fatty fish and walnuts (ALA) are linked to slower cognitive decline and may lower dementia risk. Two salmon dinners + daily walnuts cover this.',cite:'Morris et al., cohort findings on fish & cognition'},
+      {title:'Exercise for Parkinson\u2019s & aging',status:'Keep it up',body:'150+ min/week of moderate aerobic work plus 2 strength sessions is associated with lower Parkinson\u2019s incidence and better healthy-aging outcomes. Your run days handle the aerobic side — add 2 strength days.',cite:'Physical Activity Guidelines for Americans, 2nd ed.'},
+      {title:'Protein for masters runners',status:'Slightly low',body:'After 40, ~1.6\u20132.0g protein per kg body-weight helps preserve muscle and recovery. Your current meals land a bit under target on rest days — consider Greek yogurt or an extra egg.',cite:'Morton et al., Br J Sports Med 2018'}
+    ];
+
+    return { catalog, recipes, weekNeeds, coach };
+  }
+
+  selOpt(key){
+    const opts = this._d.catalog[key].options;
+    const id = this.state.selected[key];
+    return opts.find(x=>x.id===id) || opts[0];
+  }
+
+  recNutr(rid){
+    const r = this._d.recipes[rid];
+    const t = {kcal:0,protein:0,carbs:0,fat:0,fiber:0};
+    r.lines.forEach(k=>{ const op=this.selOpt(k); t.kcal+=op.n.kcal; t.protein+=op.n.protein; t.carbs+=op.n.carbs; t.fat+=op.n.fat; t.fiber+=op.n.fiber; });
+    const s=r.servings;
+    return { kcal:Math.round(t.kcal/s), protein:Math.round(t.protein/s), carbs:Math.round(t.carbs/s), fat:Math.round(t.fat/s), fiber:Math.round(t.fiber/s*10)/10 };
+  }
+
+  renderVals(){
+    this._d = this.DATA();
+    const th = this.TH()[this.state.theme];
+    const S = this.state;
+    const set = (p)=>this.setState(p);
+    const ink = 'oklch(0.31 0.02 235)';
+    const muted = 'oklch(0.6 0.01 230)';
+
+    // ---- nav ----
+    const navDef = [['plan','Plan'],['library','Recipes'],['shop','Shopping'],['coach','Coach'],['review','Nutritionist']];
+    const goTo = (k)=>set({screen:k, picking:null, flash:null});
+    const nav = navDef.map(([k,label])=>{
+      const active = k==='library' ? (S.screen==='library'||S.screen==='recipe') : S.screen===k;
+      return { label, rad:'10px', dotRad:'999px',
+        bg: active? th.tint : 'transparent', fg: active? th.deep : ink,
+        dot: active? th.accent : 'oklch(0.85 0.008 220)',
+        onClick: ()=>goTo(k) };
+    });
+
+    // ---- theme toggle pills ----
+    const tA = S.theme==='a' ? {bd:th.accent,bg:th.tint,fg:th.deep} : {bd:'oklch(0.9 0.006 220)',bg:'#fff',fg:muted};
+    const tB = S.theme==='b' ? {bd:'oklch(0.55 0.105 245)',bg:'oklch(0.95 0.034 245)',fg:'oklch(0.39 0.085 248)'} : {bd:'oklch(0.9 0.006 220)',bg:'#fff',fg:muted};
+
+    // ---- week ----
+    const dows=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const dates=[15,16,17,18,19,20,21];
+    const runDays=[1,3,5];
+    const weekDays = dows.map((dow,i)=>{
+      const active = i===S.activeDay;
+      const run = runDays.includes(i);
+      return { dow, date:dates[i],
+        bg: active? th.accent : '#fff', fg: active? '#fff' : ink,
+        bd: active? th.accent : 'oklch(0.92 0.006 220)',
+        runLabel: run? 'RUN' : '·', runColor: active? 'rgba(255,255,255,.85)' : (run? th.accent : 'oklch(0.8 0.006 220)'),
+        onClick: ()=>set({activeDay:i}) };
+    });
+    const isRun = runDays.includes(S.activeDay);
+    const activeDateLabel = dows[S.activeDay]+' Jun '+dates[S.activeDay];
+
+    // ---- household members & per-person colors ----
+    const mem = this.MEM();
+    const memColor = {
+      j: { color: th.accent, deep: th.deep, tint: th.tint },
+      m: { color: 'oklch(0.64 0.13 25)', deep: 'oklch(0.47 0.11 28)', tint: 'oklch(0.94 0.045 30)' }
+    };
+    const pkey = S.planPerson || 'j';
+    const pc = memColor[pkey];
+    const personName = mem[pkey].name;
+    const personTabs = ['j','m'].map(id=>{
+      const active = id===pkey, mc=memColor[id];
+      return { name:mem[id].name, diet:mem[id].diet, initials:mem[id].initials,
+        avBg: mc.color, bg: active? mc.tint : '#fff',
+        bd: active? mc.color : 'oklch(0.91 0.006 220)',
+        nameFg: active? ink : muted, dietFg: active? mc.deep : 'oklch(0.62 0.01 230)',
+        onClick: ()=>set({planPerson:id}) };
+    });
+
+    // ---- per-person targets ----
+    let modeLabel, modeNote, targets, flexKey=false;
+    if(pkey==='j'){
+      modeLabel = isRun? 'Run day' : 'Rest day';
+      modeNote = isRun? 'Carbohydrate ceiling raised ~85g to fuel today\u2019s run; protein and fiber held steady.' : 'Lower-carb day with a wt-loss calorie target; fiber and protein kept high for satiety.';
+      targets = isRun ? {kcal:2200,protein:145,carbs:250,fat:62,fiber:30} : {kcal:1850,protein:140,carbs:165,fat:60,fiber:30};
+      flexKey = isRun;
+    } else {
+      modeLabel = 'Vegan · maintenance';
+      modeNote = 'Plant-based maintenance targets with extra fiber. Watch B12 (fortify or supplement) and pair iron-rich meals with a little vitamin C.';
+      targets = {kcal:1850,protein:95,carbs:230,fat:55,fiber:38};
+    }
+
+    const planned = this.sumNutr(pkey, S.activeDay);
+    const pct = (v,t)=>Math.min(100,Math.round(v/t*100))+'%';
+    const barDef = [
+      {label:'Calories', v:planned.kcal, t:targets.kcal, unit:''},
+      {label:'Protein', v:planned.protein, t:targets.protein, unit:'g'},
+      {label:'Carbs', v:planned.carbs, t:targets.carbs, unit:'g', flex:flexKey},
+      {label:'Fat', v:planned.fat, t:targets.fat, unit:'g'},
+      {label:'Fiber', v:planned.fiber, t:targets.fiber, unit:'g', hero:true}
+    ];
+    const bars = barDef.map(b=>{
+      const met = b.v>=b.t;
+      return { label:b.label, text:b.v+(b.unit)+' / '+b.t+b.unit,
+        pct: pct(b.v,b.t),
+        color: b.hero? pc.color : (b.flex? 'oklch(0.72 0.09 70)' : 'oklch(0.74 0.05 200)'),
+        note: b.hero&&met? 'goal met' : (b.flex? 'run-day flex' : ''),
+        noteColor: b.hero&&met? pc.deep : 'oklch(0.6 0.06 70)' };
+    });
+
+    // ---- per-person meal day (each person sets their own meals; shared ones eaten together) ----
+    const openRec = (rid)=>set({screen:'recipe',openRecipe:rid});
+    const av = (id)=>({ initials:mem[id].initials, color:memColor[id].color });
+    const otherKey = pkey==='j' ? 'm' : 'j';
+    const dayMoments = this.getDay(S.activeDay);
+    const meals = dayMoments.filter(mo=>this.participates(mo, pkey)).map(mo=>{
+      const shared = mo.mode==='shared';
+      const rid = shared ? mo.shared : mo[pkey];
+      const rec = this._d.recipes[rid];
+      return {
+        id:mo.id, label:mo.label, shared,
+        name: rec? rec.name : '—', kcal: rec? (this.recNutr(rid).kcal+' kcal') : '',
+        avatars: shared ? [av('j'),av('m')] : [av(pkey)],
+        badge: shared ? 'TOGETHER' : 'JUST '+(pkey==='j'?'YOU':'MARA'),
+        badgeColor: shared ? th.deep : pc.deep,
+        togetherLabel: shared ? '✓ Together' : '+ Eat together',
+        onOpen: ()=>openRec(rid),
+        onChange: ()=>this.startPickChange(mo.id, pkey, shared),
+        onToggle: ()=>this.toggleTogether(S.activeDay, mo.id, pkey),
+        onRemove: ()=>this.removeMeal(S.activeDay, mo.id, pkey)
+      };
+    });
+    const myCount = meals.length;
+    const otherCount = this.mealsFor(otherKey, S.activeDay).length;
+    const otherName = mem[otherKey].name;
+    const onAddMeal = ()=>this.startPickAdd(pkey);
+
+    // inline plan composer (same coach, scoped to this day)
+    const planThread = this.state.messages.slice(-2).map(m=>{
+      const me=m.role==='me';
+      return { text:m.text, who: me?'You':'Coach',
+        bg: me? th.accent : th.soft, fg: me? '#fff' : ink,
+        border: me? 'none' : '1px solid oklch(0.92 0.006 220)',
+        align: me?'flex-end':'flex-start',
+        radius: me? '12px 12px 4px 12px':'12px 12px 12px 4px' };
+    });
+    const planPromptDefs = [
+      ['Plan around what I have','We have a lot of cucumbers this week from the garden \u2014 can we build some meals around that?'],
+      ['Swap a meal','Swap this day\u2019s lunch for something different.'],
+      ['Make it vegetarian','Make this day vegetarian but keep my protein up.']
+    ];
+    const planPrompts = planPromptDefs.map(([label,text])=>({ label, onClick:()=>this.sendPlan(text) }));
+
+    let coachTip, coachCite;
+    if(pkey==='m'){
+      coachTip = 'Mara\u2019s plant-based day clears 38g fiber and ~95g protein from tofu, tempeh and chickpeas. Add a B12-fortified food or supplement, since plant diets run low on it.';
+      coachCite = 'Vegan nutrient adequacy: Melina et al., Acad Nutr Diet 2016';
+    } else if(isRun){
+      coachTip = 'It\u2019s a run day — your bowl + oats already front-load carbs. Add a banana 30\u201360 min pre-run for quick glycogen without GI load.';
+      coachCite = 'Carb timing: Thomas et al., ACSM position stand 2016';
+    } else {
+      coachTip = 'On rest days, leading with fiber and protein blunts afternoon hunger. Today\u2019s plan clears your 30g fiber goal — a key lever for colon health.';
+      coachCite = 'Fiber & colorectal risk: Aune et al., BMJ 2011';
+    }
+
+    // ---- recipe view ----
+    const rid = S.openRecipe;
+    const R = this._d.recipes[rid];
+    const per = this.recNutr(rid);
+    const perServing = [
+      {label:'kcal', val:per.kcal, color:ink},
+      {label:'protein', val:per.protein+'g', color:ink},
+      {label:'carbs', val:per.carbs+'g', color:ink},
+      {label:'fat', val:per.fat+'g', color:ink},
+      {label:'fiber', val:per.fiber+'g', color:th.accent}
+    ];
+    const storeColor = (s)=> s==='Default'? 'oklch(0.55 0.01 230)' : th.deep;
+    const lines = R.lines.map(key=>{
+      const cat = this._d.catalog[key];
+      const sel = this.selOpt(key);
+      const open = S.openLine===key;
+      const options = cat.options.map(op=>{
+        const isSel = op.id===sel.id;
+        return { store:op.store, brand:op.brand, size:op.size,
+          priceLabel: op.price==null? 'pantry' : ('$'+op.price.toFixed(2)),
+          nk:op.n.kcal, np:op.n.protein, nc:op.n.carbs, nf:op.n.fiber,
+          fibColor: th.accent, note: op.note,
+          storeColor: storeColor(op.store),
+          bd: isSel? th.accent : 'oklch(0.91 0.006 220)',
+          bg: isSel? th.tint : '#fff',
+          tag: isSel? 'Selected' : 'Use this',
+          tagColor: isSel? th.deep : muted,
+          onSelect: ()=>this.setState(st=>({selected:Object.assign({},st.selected,{[key]:op.id})})) };
+      });
+      return { qty:cat.qty, label:cat.label, open,
+        selSummary: sel.store==='Default'? 'default — pick a product' : (sel.store+' · '+(sel.price==null?'pantry':'$'+sel.price.toFixed(2))),
+        caret: open? '\u2212' : '+',
+        options,
+        onToggle: ()=>this.setState(st=>({openLine: st.openLine===key? null : key})) };
+    });
+
+    // ---- shopping ----
+    const order = ['Whole Foods',"Trader Joe's",'Target','King Soopers','Online','Default'];
+    const buckets = {};
+    let total = 0;
+    this._d.weekNeeds.forEach(need=>{
+      const op = this.selOpt(need.key);
+      const cat = this._d.catalog[need.key];
+      const store = op.store;
+      if(!buckets[store]) buckets[store]=[];
+      const price = op.price==null? 0 : op.price;
+      const checked = !!S.checked[need.key];
+      if(!checked) total += price;
+      const whoDots = (need.who==='both'? ['j','m'] : [need.who]).map(id=>({initials:mem[id].initials, color:memColor[id].color}));
+      buckets[store].push({
+        key:need.key, brand:op.brand, size:op.size,
+        fills:'fills "'+cat.label+'"', whoDots,
+        meals: need.meals>0? need.meals+'\u00d7 meals' : 'pantry',
+        priceLabel: op.price==null? 'have' : '$'+op.price.toFixed(2),
+        _price: price, checked,
+        mark: checked? '\u2713':'',
+        boxBd: checked? th.accent : 'oklch(0.82 0.008 220)',
+        boxBg: checked? th.accent : '#fff',
+        strike: checked? 'line-through':'none',
+        textColor: checked? 'oklch(0.7 0.008 220)' : ink,
+        onCheck: ()=>this.setState(st=>({checked:Object.assign({},st.checked,{[need.key]:!st.checked[need.key]})}))
+      });
+    });
+    const groups = order.filter(s=>buckets[s]).map(store=>{
+      const items = buckets[store];
+      const sub = items.reduce((a,it)=> a + (it.checked?0:it._price), 0);
+      return { store: store==='Default'? 'Pantry · likely on hand' : store,
+        items, count: items.length, subtotal: '$'+sub.toFixed(2) };
+    });
+
+    // ---- coach cards ----
+    const coachCards = this._d.coach.map(c=>{
+      const good = c.status==='On track' || c.status==='Keep it up';
+      return Object.assign({}, c,
+        good ? {statusColor:th.deep, statusBg:th.tint}
+             : {statusColor:'oklch(0.5 0.09 60)', statusBg:'oklch(0.95 0.04 70)'});
+    });
+
+    // ---- coach chat ----
+    const messages = this.state.messages.map(m=>{
+      const me = m.role==='me';
+      return { text:m.text, citeShow:!!m.cite, citeText:m.cite||'',
+        align: me?'flex-end':'flex-start',
+        bg: me? th.accent : th.soft,
+        fg: me? '#fff' : ink,
+        border: me? 'none' : '1px solid oklch(0.92 0.006 220)',
+        radius: me? '14px 14px 4px 14px' : '14px 14px 14px 4px' };
+    });
+    const qpDefs = [
+      ['Log today\u2019s run','I did my 5-mile run this morning \u2014 felt good but a bit tired.'],
+      ['I\u2019m away Sunday','Heads up \u2014 I\u2019m at my parents\u2019 on Sunday, so skip meal planning that day.'],
+      ['Adjust my goals','Can we revisit my fiber and calorie targets?'],
+      ['Log a weigh-in','Logged my weight today: 189 lb.']
+    ];
+    const quickPrompts = qpDefs.map(([label,text])=>({ label, onClick:()=>this.sendText(text) }));
+    const measurements = [
+      {label:'Weight', val:'189 lb', sub:'start 198 · goal 175 · -0.8/wk', hasBar:true, pct:'39%'},
+      {label:'Weekly mileage', val:'18 mi', sub:'+3 vs last week', hasBar:false, pct:'0%'},
+      {label:'Resting HR', val:'56 bpm', sub:'steady — good aerobic base', hasBar:false, pct:'0%'},
+      {label:'Last check-in', val:'2 days ago', sub:'weigh-in + run logged', hasBar:false, pct:'0%'}
+    ];
+    const coachMini = coachCards.map(c=>({ title:c.title, status:c.status, dot:c.statusColor }));
+
+    // ---- recipe library (search + filter + assign) ----
+    const q = (S.recipeQuery||'').trim().toLowerCase();
+    const dietF = S.recipeDiet, slotF = S.recipeSlot;
+    const allRecipes = Object.keys(this._d.recipes).map(id=>this._d.recipes[id]);
+    const matchText = (r)=>{
+      const ing = r.lines.map(k=>this._d.catalog[k].label).join(' ');
+      return (r.name+' '+(r.tags||[]).join(' ')+' '+ing).toLowerCase();
+    };
+    const libRecipes = allRecipes.filter(r=>{
+      if(dietF==='vegan' && !r.vegan) return false;
+      if(slotF!=='all' && r.slot!==slotF) return false;
+      if(q && matchText(r).indexOf(q)<0) return false;
+      return true;
+    }).map(r=>{
+      const n=this.recNutr(r.id);
+      return { id:r.id, name:r.name, slot:r.slot, time:r.time, img:r.img,
+        vegan:!!r.vegan, tags:(r.tags||[]).slice(0,3),
+        kcal:n.kcal+' kcal', fiber:n.fiber+'g fiber',
+        veganBadge: r.vegan? 'Vegan' : '', veganShow: !!r.vegan,
+        onView:()=>set({screen:'recipe', openRecipe:r.id}),
+        onPick:()=>this.selectRecipe(r.id),
+        pickLabel: S.picking ? 'Select' : 'Add to plan' };
+    });
+    const dietChips = [['all','All recipes'],['vegan','Vegan']].map(([v,label])=>({
+      label, onClick:()=>set({recipeDiet:v}),
+      bg: dietF===v? th.accent : '#fff', fg: dietF===v? '#fff' : ink,
+      bd: dietF===v? th.accent : 'oklch(0.91 0.006 220)' }));
+    const slotChips = [['all','Any meal'],['Breakfast','Breakfast'],['Lunch','Lunch'],['Dinner','Dinner'],['Snack','Snack']].map(([v,label])=>({
+      label, onClick:()=>set({recipeSlot:v}),
+      bg: slotF===v? th.tint : '#fff', fg: slotF===v? th.deep : muted,
+      bd: slotF===v? th.accent : 'oklch(0.91 0.006 220)' }));
+    let pickBanner=null;
+    if(S.picking){
+      const vk = S.picking.viewer;
+      const who = S.picking.person==='both' ? 'both of you' : (vk==='m'?'Mara':'you');
+      pickBanner = (S.picking.kind==='add' ? 'Adding a meal for ' : 'Choosing a meal for ') + who + ' · ' + this._dayLabel(S.picking.day);
+    }
+    const libCount = libRecipes.length + (libRecipes.length===1?' recipe':' recipes');
+
+    // ---- nutritionist review (reads the live plan) ----
+    const sevMap = {
+      good:  { color:'oklch(0.55 0.11 150)', tint:'oklch(0.95 0.04 150)', label:'Looking good' },
+      tweak: { color:'oklch(0.66 0.13 70)',  tint:'oklch(0.95 0.05 80)',  label:'Worth a tweak' },
+      watch: { color:'oklch(0.58 0.16 30)',  tint:'oklch(0.95 0.05 35)',  label:'Keep an eye on' }
+    };
+    const rev = this.nutritionReview(S.activeDay);
+    const mkFindings = (arr)=>arr.map(fd=>{
+      const sv=sevMap[fd.sev];
+      return { title:fd.title, body:fd.body, cite:fd.cite||'', citeShow:!!fd.cite,
+        sevColor:sv.color, sevTint:sv.tint, sevLabel:sv.label };
+    });
+    const reviewPeople = ['j','m'].map(id=>{
+      const n=this.sumNutr(id,S.activeDay), t=this.personTargets(id,S.activeDay), mc=memColor[id];
+      const findings=mkFindings(rev[id]);
+      const counts={good:0,tweak:0,watch:0};
+      rev[id].forEach(fd=>counts[fd.sev]++);
+      return { name:mem[id].name, initials:mem[id].initials, avBg:mc.color, deep:mc.deep, tint:mc.tint,
+        mode:t.mode, summary:n.kcal+' kcal · '+n.protein+'g protein · '+n.fiber+'g fiber',
+        scoreLine: counts.watch+' to watch · '+counts.tweak+' to tweak · '+counts.good+' on track',
+        findings };
+    });
+    const reviewHouse = mkFindings(rev.house);
+    const reviewOverview = 'I read both plans for '+activeDateLabel+' and scored each item. Here’s what’s working and what I’d change — tap “Bring into coach chat” to put these into action.';
+
+    const titles = {plan:'This week',recipe:R.name,shop:'Shopping list',coach:'Coach',library:'Recipe library',review:'Nutritionist review'};
+    const subs = {plan:'Plan \u00b7 fuel \u00b7 hit your goals',recipe:'Recipe \u2192 ingredient \u2192 product',shop:'Auto-built from your planned meals',coach:'Chat \u00b7 log runs, life, and goals',library:'Search and add meals to your plan',review:'An RD agent reads your live plan'};
+
+    return {
+      accent:th.accent, deep:th.deep, tint:th.tint, soft:th.soft, rad:th.rad, themeTag:th.tag,
+      nav, tA, tB, onThemeA:()=>set({theme:'a'}), onThemeB:()=>set({theme:'b'}),
+      isPlan:S.screen==='plan', isRecipe:S.screen==='recipe', isShop:S.screen==='shop', isCoach:S.screen==='coach', isLibrary:S.screen==='library', isReview:S.screen==='review',
+      reviewPeople, reviewHouse, reviewOverview, onDiscussCoach:()=>this.sendReviewToCoach(), onReanalyze:()=>this.forceUpdate(),
+      libRecipes, dietChips, slotChips, pickBanner, hasPick:!!S.picking, libCount,
+      recipeQuery:S.recipeQuery, flash:S.flash, hasFlash:!!S.flash,
+      onRecipeQuery:(e)=>set({recipeQuery:e.target.value}),
+      onClearPick:()=>set({screen:'plan', picking:null}),
+      noResults: libRecipes.length===0,
+      pageTitle:titles[S.screen], pageSub:subs[S.screen], dateLabel:'Thu, Jun 18 2026', animKey:S.screen+S.theme,
+      weekDays, activeDateLabel, modeLabel, modeNote, bars, coachTip, coachCite,
+      meals, myCount, otherCount, otherName, onAddMeal, personTabs, personName,
+      planThread, planPrompts, planDraft:this.state.planDraft,
+      onPlanDraft:(e)=>this.setState({planDraft:e.target.value}),
+      onPlanKey:(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); this.sendPlan(this.state.planDraft); } },
+      onPlanSend:()=>this.sendPlan(this.state.planDraft),
+      rec:{ name:R.name, slot:R.slot, time:R.time, servings:R.servings, img:R.img, tags:R.tags, note:R.note, perServing, lines },
+      groups, shopTotal:'$'+total.toFixed(2),
+      shopNote:'One combined list for the household — your meals and Mara\u2019s. Badges show who each item is for; shared items count once.',
+      coachCards, messages, quickPrompts, measurements, coachMini,
+      draft:this.state.draft,
+      threadRef: this._tr || (this._tr = (el)=>{ this._threadEl=el; }),
+      onDraft: (e)=>this.setState({draft:e.target.value}),
+      onKey: (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); this.sendText(this.state.draft); } },
+      onSend: ()=>this.sendText(this.state.draft)
+    };
+  }
+}
+</script>
+</body>
+</html>
