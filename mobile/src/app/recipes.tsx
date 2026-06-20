@@ -6,6 +6,8 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Severity, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
+import { PLAN_DATE, addRecipeToPlan } from '@/lib/plan';
 import { useRecipes, type LibraryRecipe, type RecipeSlot } from '@/hooks/use-recipes';
 
 const SLOTS: RecipeSlot[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
@@ -18,6 +20,11 @@ export default function RecipesScreen() {
   const [diet, setDiet] = useState<'all' | 'vegan'>('all');
   const [slot, setSlot] = useState<'all' | RecipeSlot>('all');
   const [open, setOpen] = useState<LibraryRecipe | null>(null);
+  const { member } = useAuth();
+  const [members, setMembers] = useState<{ id: string; name: string; short: string }[]>([]);
+  useEffect(() => {
+    supabase.from('member').select('id,name,short').then(({ data }) => setMembers(data ?? []));
+  }, []);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -87,7 +94,15 @@ export default function RecipesScreen() {
         </ScrollView>
       )}
 
-      <RecipeDetailModal recipe={open} library={data ?? []} onOpen={setOpen} onClose={() => setOpen(null)} />
+      <RecipeDetailModal
+        recipe={open}
+        library={data ?? []}
+        members={members}
+        youId={member?.id ?? null}
+        householdId={member?.household_id ?? null}
+        onOpen={setOpen}
+        onClose={() => setOpen(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -166,20 +181,28 @@ function matchComponent(text: string, library: LibraryRecipe[], currentId: strin
 function RecipeDetailModal({
   recipe,
   library,
+  members,
+  youId,
+  householdId,
   onOpen,
   onClose,
 }: {
   recipe: LibraryRecipe | null;
   library: LibraryRecipe[];
+  members: { id: string; name: string; short: string }[];
+  youId: string | null;
+  householdId: string | null;
   onOpen: (r: LibraryRecipe) => void;
   onClose: () => void;
 }) {
   const theme = useTheme();
   const [lines, setLines] = useState<DetailLine[] | null>(null);
+  const [added, setAdded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!recipe) return;
     setLines(null);
+    setAdded(null);
     let active = true;
     supabase
       .from('recipe_line')
@@ -246,6 +269,36 @@ function RecipeDetailModal({
             </ThemedText>
           ) : null}
 
+          {householdId && members.length ? (
+            added ? (
+              <ThemedText type="smallBold" style={[styles.addedMsg, { color: Severity.good }]}>
+                Added to {added} day ✓
+              </ThemedText>
+            ) : (
+              <View style={styles.addRow}>
+                {members.map((m) => (
+                  <Pressable
+                    key={m.id}
+                    onPress={async () => {
+                      const { error } = await addRecipeToPlan({
+                        householdId,
+                        date: PLAN_DATE,
+                        memberId: m.id,
+                        recipeId: r.id,
+                        slot: r.slot,
+                      });
+                      if (!error) setAdded(m.id === youId ? 'your' : `${m.name}’s`);
+                    }}
+                    style={[styles.addBtn, { backgroundColor: Brand.accent }]}>
+                    <ThemedText type="smallBold" style={{ color: '#fff' }}>
+                      + Add to {m.id === youId ? 'your' : `${m.name}’s`} day
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            )
+          ) : null}
+
           <ThemedText type="smallBold" style={styles.ingHeading}>
             Ingredients
           </ThemedText>
@@ -303,6 +356,9 @@ const styles = StyleSheet.create({
   modalBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.four, paddingTop: Spacing.two },
   detailScroll: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.two },
   detailName: { marginTop: Spacing.one },
+  addRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.three },
+  addBtn: { borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  addedMsg: { marginTop: Spacing.three },
   ingHeading: { fontSize: 17, fontWeight: '800', marginTop: Spacing.four },
   ingList: { gap: Spacing.two, marginTop: Spacing.one },
   lineHeading: { textTransform: 'uppercase', letterSpacing: 0.5, color: Brand.deep, fontSize: 12, marginTop: Spacing.two },

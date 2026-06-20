@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Members, Radius, Severity, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlanDay, type PlanMeal, type PlanTarget } from '@/hooks/use-plan-day';
 import { useAuth } from '@/lib/auth';
-
-// The seeded demo day. A week selector lands later in M2.
-const PLAN_DATE = '2026-06-18';
+import { PLAN_DATE, removeFromPlan } from '@/lib/plan';
 
 const TARGET_LABEL: Record<PlanTarget['kind'], string> = {
   run_day: 'Run day',
@@ -28,8 +27,11 @@ function formatDate(date: string): string {
 export default function PlanScreen() {
   const theme = useTheme();
   const { member } = useAuth();
-  const { data, loading, error } = usePlanDay(PLAN_DATE);
+  const { data, loading, error, refetch } = usePlanDay(PLAN_DATE);
   const [personId, setPersonId] = useState<string | null>(null);
+
+  // Refresh when the tab regains focus (e.g. after adding a recipe in Recipes).
+  useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
 
   // Default to viewing yourself once the household loads.
   useEffect(() => {
@@ -98,6 +100,9 @@ export default function PlanScreen() {
                   meal={meal}
                   color={personColor}
                   background={theme.backgroundElement}
+                  onRemove={() => {
+                    if (personId) removeFromPlan(meal.momentId, personId).then(refetch);
+                  }}
                 />
               ))
             )}
@@ -221,18 +226,35 @@ function MacroBar({
   );
 }
 
-function MealCard({ meal, color, background }: { meal: PlanMeal; color: string; background: string }) {
+function MealCard({
+  meal,
+  color,
+  background,
+  onRemove,
+}: {
+  meal: PlanMeal;
+  color: string;
+  background: string;
+  onRemove: () => void;
+}) {
   return (
     <View style={[styles.card, styles.mealCard, { backgroundColor: background }]}>
       <View style={styles.mealHeadRow}>
         <ThemedText type="smallBold" style={styles.mealLabel}>
           {meal.label}
         </ThemedText>
-        {meal.shared ? (
-          <ThemedText type="smallBold" style={[styles.tag, { color, borderColor: color }]}>
-            Together
-          </ThemedText>
-        ) : null}
+        <View style={styles.mealHeadRight}>
+          {meal.shared ? (
+            <ThemedText type="smallBold" style={[styles.tag, { color, borderColor: color }]}>
+              Together
+            </ThemedText>
+          ) : null}
+          <Pressable onPress={onRemove} hitSlop={8}>
+            <ThemedText type="smallBold" style={styles.removeX}>
+              ×
+            </ThemedText>
+          </Pressable>
+        </View>
       </View>
       <View style={styles.mealBodyRow}>
         <ThemedText style={styles.mealName}>{meal.recipeName}</ThemedText>
@@ -283,6 +305,8 @@ const styles = StyleSheet.create({
   },
   mealCard: { gap: Spacing.two },
   mealHeadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  mealHeadRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  removeX: { color: Brand.deep, fontSize: 18, lineHeight: 18 },
   mealLabel: {
     textTransform: 'uppercase',
     letterSpacing: 0.6,

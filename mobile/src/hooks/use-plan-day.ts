@@ -4,7 +4,7 @@
  * personTargets onto the real schema.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import {
@@ -69,6 +69,7 @@ export function usePlanDay(date: string) {
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -97,7 +98,7 @@ export function usePlanDay(date: string) {
         supabase.from('member').select('id,name,short,initials,diet,accent_color,role'),
         supabase.from('target').select('member_id,kind,kcal,protein,carbs,fat,fiber'),
         supabase.from('moment_assignment').select('moment_id,member_id,recipe_id,servings').in('moment_id', momentIds),
-        supabase.from('recipe').select('id,name,slot,servings'),
+        supabase.from('recipe').select('id,name,slot,servings,kcal,protein,carbs,fat,fiber'),
         supabase.from('recipe_line').select('recipe_id,ingredient_id,quantity'),
         supabase.from('product_selection').select('ingredient_id,product_id'),
         supabase.from('product').select('id,serving_size,kcal,protein,carbs,fat,fiber'),
@@ -149,7 +150,23 @@ export function usePlanDay(date: string) {
             servingSize: p?.serving_size ?? 1,
           };
         });
-        recipeNutr.set(r.id, recipeNutrition(inputs, r.servings));
+        // Product-computed nutrition; fall back to the recipe's cached
+        // per-serving values (imported recipes have no product mapping yet).
+        const computed = recipeNutrition(inputs, r.servings);
+        const hasProducts =
+          computed.kcal > 0 || computed.protein > 0 || computed.carbs > 0 || computed.fat > 0 || computed.fiber > 0;
+        recipeNutr.set(
+          r.id,
+          hasProducts
+            ? computed
+            : {
+                kcal: Number(r.kcal ?? 0),
+                protein: Number(r.protein ?? 0),
+                carbs: Number(r.carbs ?? 0),
+                fat: Number(r.fat ?? 0),
+                fiber: Number(r.fiber ?? 0),
+              },
+        );
       }
 
       const isRunDay = RUN_WEEKDAYS.has(weekdayOf(date));
@@ -204,7 +221,8 @@ export function usePlanDay(date: string) {
     return () => {
       active = false;
     };
-  }, [date]);
+  }, [date, reload]);
 
-  return { data, loading, error };
+  const refetch = useCallback(() => setReload((n) => n + 1), []);
+  return { data, loading, error, refetch };
 }
