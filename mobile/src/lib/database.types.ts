@@ -453,6 +453,112 @@ export type Database = {
           },
         ]
       }
+      prescription: {
+        Row: {
+          energy_delta_kcal: number
+          energy_strategy: string | null
+          member_id: string
+          reference_weight_kg: number | null
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          energy_delta_kcal?: number
+          energy_strategy?: string | null
+          member_id: string
+          reference_weight_kg?: number | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          energy_delta_kcal?: number
+          energy_strategy?: string | null
+          member_id?: string
+          reference_weight_kg?: number | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescription_rule: {
+        Row: {
+          active: boolean
+          category: string | null
+          comparator: string | null
+          created_at: string
+          evidence: string | null
+          health_tag: string | null
+          id: string
+          key: string
+          kind: string
+          member_id: string
+          origin: string
+          period: string | null
+          rationale: string | null
+          scope: string
+          source: string | null
+          unit: string | null
+          value: number | null
+          value_max: number | null
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          comparator?: string | null
+          created_at?: string
+          evidence?: string | null
+          health_tag?: string | null
+          id?: string
+          key: string
+          kind: string
+          member_id: string
+          origin?: string
+          period?: string | null
+          rationale?: string | null
+          scope?: string
+          source?: string | null
+          unit?: string | null
+          value?: number | null
+          value_max?: number | null
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          comparator?: string | null
+          created_at?: string
+          evidence?: string | null
+          health_tag?: string | null
+          id?: string
+          key?: string
+          kind?: string
+          member_id?: string
+          origin?: string
+          period?: string | null
+          rationale?: string | null
+          scope?: string
+          source?: string | null
+          unit?: string | null
+          value?: number | null
+          value_max?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescription_rule_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product: {
         Row: {
           allergen_traces: string[]
