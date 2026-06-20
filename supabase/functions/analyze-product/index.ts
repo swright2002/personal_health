@@ -6,7 +6,7 @@ import { fdcSearch } from '../_shared/fdc.ts';
 import { deriveDietAllergen } from '../_shared/diet.ts';
 import { rankCandidates } from '../_shared/ranking.ts';
 import { EMPTY_NUTRITION, per100From, ProductCandidate, publicCandidate, round } from '../_shared/normalize.ts';
-import { ingredientBasis } from '../_shared/forms.ts';
+import { detectForm, ingredientBasis } from '../_shared/forms.ts';
 import { loadFoodTerms, loadMembers, loadPreferredBrands } from '../_shared/db.ts';
 
 const ANALYZE_WHOLE_FOOD = new Set(['produce', 'grain', 'legume', 'meat', 'fish', 'dairy', 'oil', 'spice', 'nut']);
@@ -146,8 +146,11 @@ Deno.serve(async (req) => {
       const wholeFood = !brandIntent && category != null && ANALYZE_WHOLE_FOOD.has(category);
       let aggregators: ProductCandidate[];
       if (wholeFood) {
-        // Surface the right cooked/dry FDC entry: "Quinoa, cooked" vs "uncooked".
-        const formWord = ingBasis === 'wet' ? 'cooked' : ingBasis === 'dry' ? 'dry' : '';
+        // Surface the right FDC entry by the ingredient's actual form ("Quinoa,
+        // cooked" vs "uncooked"; "Oranges, raw" — NOT "cooked"). Grain/legume with
+        // no stated form defaults to dry (as purchased).
+        const f = detectForm(label);
+        const formWord = f === 'raw' ? 'raw' : (f === 'cooked' || f === 'canned') ? 'cooked' : ingBasis === 'dry' ? 'dry' : '';
         const fdcQuery = formWord && !query.toLowerCase().includes(formWord) ? `${query} ${formWord}` : query;
         const [fdc, off] = await Promise.all([fdcSearch(fdcQuery, 'Foundation,SR Legacy', 6), offSearch(query, 8)]);
         aggregators = [...fdc, ...off];

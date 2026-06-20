@@ -79,7 +79,9 @@ function sourceRank(source: string, category: string | null, brandIntent: boolea
 const NON_IDENTITY = new Set([
   'cooked', 'raw', 'dry', 'dried', 'uncooked', 'fresh', 'boiled', 'roasted', 'steamed', 'canned', 'drained',
   'chopped', 'sliced', 'smashed', 'cubed', 'crumbled', 'frozen', 'organic', 'whole', 'ground', 'mature',
-  'with', 'without', 'in', 'and', 'or', 'salt', 'water', 'peel', 'seeds', 'seed', 'plain', 'unsweetened',
+  'with', 'without', 'in', 'and', 'or', 'salt', 'water', 'seeds', 'seed', 'plain', 'unsweetened',
+  // FDC description boilerplate — noise, not food identity (but NOT "peel"/"juice", which change the food)
+  'all', 'commercial', 'varieties', 'variety', 'includes', 'usda', 'program', 'distribution', 'type', 'types',
 ]);
 const idTokens = (s: string) =>
   s.toLowerCase().replace(/[,()]/g, ' ').split(/\s+/).map((w) => w.replace(/s$/, '')).filter((w) => w.length > 2 && !NON_IDENTITY.has(w));
