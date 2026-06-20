@@ -621,10 +621,14 @@ export type Database = {
       }
       recipe: {
         Row: {
+          allergens: string[]
           carbs: number | null
           created_at: string
+          diet_level: number | null
+          diet_status: string | null
           fat: number | null
           fiber: number | null
+          health_tags: string[]
           household_id: string
           id: string
           img: string | null
@@ -645,10 +649,14 @@ export type Database = {
           vegan: boolean
         }
         Insert: {
+          allergens?: string[]
           carbs?: number | null
           created_at?: string
+          diet_level?: number | null
+          diet_status?: string | null
           fat?: number | null
           fiber?: number | null
+          health_tags?: string[]
           household_id: string
           id?: string
           img?: string | null
@@ -669,10 +677,14 @@ export type Database = {
           vegan?: boolean
         }
         Update: {
+          allergens?: string[]
           carbs?: number | null
           created_at?: string
+          diet_level?: number | null
+          diet_status?: string | null
           fat?: number | null
           fiber?: number | null
+          health_tags?: string[]
           household_id?: string
           id?: string
           img?: string | null
