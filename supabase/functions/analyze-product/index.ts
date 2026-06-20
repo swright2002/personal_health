@@ -14,6 +14,53 @@ const ANALYZE_WHOLE_FOOD = new Set(['produce', 'grain', 'legume', 'meat', 'fish'
 // entries that carry no ingredient list). Excludes meat/fish/dairy/sweetener.
 const PLANT_CATS = new Set(['produce', 'grain', 'legume', 'nut', 'oil', 'spice']);
 
+// Map a learned brand to the retailer whose site carries it, so we can source a
+// new ingredient from the household's store FIRST (their actual product) instead
+// of settling for a generic aggregator entry.
+const RETAILERS: { match: RegExp; domain: string; brand: string }[] = [
+  { match: /365|whole\s*foods/i, domain: 'wholefoodsmarket.com', brand: '365 organic' },
+];
+function preferredRetailer(brands: string[]): (typeof RETAILERS)[number] | null {
+  for (const b of brands) for (const r of RETAILERS) if (r.match.test(b)) return r;
+  return null;
+}
+
+type RetailerResult = { candidate: ProductCandidate | null; ddg: number; url: string | null };
+
+/** Find the household's-retailer product for a query via web search, then extract
+ *  its nutrition from the product page (the proven manufacturer path). DuckDuckGo
+ *  intermittently rate-limits datacenter IPs, so retry a couple times. */
+async function retailerSearch(query: string, retailer: (typeof RETAILERS)[number], anthropicKey?: string): Promise<RetailerResult> {
+  if (!anthropicKey) return { candidate: null, ddg: 0, url: null };
+  // site: keeps results on the retailer; brand sharpens to the 365 line.
+  const q = `${query} ${retailer.brand} site:${retailer.domain}`;
+  const re = new RegExp(retailer.domain.replace(/\./g, '\\.') + '/product/[a-z0-9-]+', 'i');
+  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
+  const endpoints: (() => Promise<Response>)[] = [
+    () => fetch('https://html.duckduckgo.com/html/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }, body: 'q=' + encodeURIComponent(q) }),
+    () => fetch('https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(q), { headers: { 'User-Agent': UA } }),
+  ];
+  let lastStatus = 0;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    for (const call of endpoints) {
+      let html = '';
+      try {
+        const r = await call();
+        lastStatus = r.status;
+        html = await r.text();
+      } catch {
+        continue;
+      }
+      const m = html.match(re);
+      if (m) {
+        const url = 'https://www.' + m[0];
+        return { candidate: await extractManufacturer(url, anthropicKey), ddg: lastStatus, url };
+      }
+    }
+  }
+  return { candidate: null, ddg: lastStatus, url: null };
+}
+
 async function extractManufacturer(url: string, anthropicKey?: string): Promise<ProductCandidate | null> {
   if (!anthropicKey) return null;
   let text = '';
@@ -86,21 +133,30 @@ Deno.serve(async (req) => {
     const ingBasis = ingredientBasis(label, category);
 
     let candidates: ProductCandidate[] = [];
+    let retailerResult: RetailerResult = { candidate: null, ddg: 0, url: null };
     if (mode === 'manufacturer_url') {
       const c = await extractManufacturer(body.url, anthropicKey);
       if (c) candidates = [c];
     } else {
+      // Preferred-retailer-first: if the household has a store habit (e.g. 365 →
+      // Whole Foods), try sourcing their actual product before the aggregators.
+      const retailer = body.skip_retailer ? null : preferredRetailer(preferredBrands);
+      const retailerP = retailer ? retailerSearch(query, retailer, anthropicKey) : Promise.resolve({ candidate: null, ddg: 0, url: null } as RetailerResult);
+
       const wholeFood = !brandIntent && category != null && ANALYZE_WHOLE_FOOD.has(category);
+      let aggregators: ProductCandidate[];
       if (wholeFood) {
         // Surface the right cooked/dry FDC entry: "Quinoa, cooked" vs "uncooked".
         const formWord = ingBasis === 'wet' ? 'cooked' : ingBasis === 'dry' ? 'dry' : '';
         const fdcQuery = formWord && !query.toLowerCase().includes(formWord) ? `${query} ${formWord}` : query;
         const [fdc, off] = await Promise.all([fdcSearch(fdcQuery, 'Foundation,SR Legacy', 6), offSearch(query, 8)]);
-        candidates = [...fdc, ...off];
+        aggregators = [...fdc, ...off];
       } else {
         const [off, fdc] = await Promise.all([offSearch(query, 12), fdcSearch(query, 'Branded', 5)]);
-        candidates = [...off, ...fdc];
+        aggregators = [...off, ...fdc];
       }
+      retailerResult = await retailerP;
+      candidates = retailerResult.candidate ? [retailerResult.candidate, ...aggregators] : aggregators;
     }
 
     // dedupe by barcode (else source_ref)
@@ -121,8 +177,8 @@ Deno.serve(async (req) => {
       // plain plant food (grain/legume/produce/nut/oil/spice) IS vegan. Infer it
       // for those so the authoritative-nutrition FDC entry can win on form.
       if (
-        c.diet_level == null &&
-        (c.analysis_source === 'fdc_foundation' || c.analysis_source === 'fdc_sr_legacy') &&
+        (c.diet_level == null || c.diet_status === 'unknown') &&
+        (c.analysis_source === 'fdc_foundation' || c.analysis_source === 'fdc_sr_legacy' || c.analysis_source === 'manufacturer') &&
         category && PLANT_CATS.has(category)
       ) {
         c.diet_level = 3;
@@ -136,6 +192,7 @@ Deno.serve(async (req) => {
       candidates: ranked.map((c) => ({ ...publicCandidate(c), compliance: (c as any).compliance })),
       auto_suggest_index,
       error: null,
+      debug: body.debug ? { preferredBrands, retailer: preferredRetailer(preferredBrands)?.domain ?? null, ddg: retailerResult.ddg, retailerUrl: retailerResult.url, retailerFound: !!retailerResult.candidate } : undefined,
     });
   } catch (e) {
     return json({ ok: false, candidates: [], auto_suggest_index: null, error: { code: 'INTERNAL', message: String(e) } }, 500);
