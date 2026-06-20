@@ -2,6 +2,7 @@
 // probing + full-text search, normalized to ProductCandidate.
 import { EMPTY_NUTRITION, Nutrition, per100From, ProductCandidate, round } from './normalize.ts';
 import { leftPad14, stripNonDigits } from './gtin.ts';
+import { detectForm } from './forms.ts';
 
 const UA = 'HarborMealPlanner/0.1 (spencerwright@gmail.com)';
 const FIELDS = [
@@ -148,6 +149,7 @@ export function normalizeOff(p: any): ProductCandidate | null {
     allergens: [],
     allergen_traces: [],
     gluten_free: null,
+    form: detectForm(`${name} ${p.categories_tags || ''}`),
     analysis_source: 'off',
     source_url: `https://world.openfoodfacts.org/product/${p.code}`,
     source_ref: String(p.code),

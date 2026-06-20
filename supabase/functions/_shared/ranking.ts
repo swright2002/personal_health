@@ -1,5 +1,6 @@
 // Auto-suggest ranking + per-member compliance (spec §F).
 import { completenessScore, ProductCandidate } from './normalize.ts';
+import { formMatchScore } from './forms.ts';
 
 export type Member = { id: string; diet_level: number; allergies: string[]; restrictions: string[] };
 export type Tag = 'allowed' | 'unverified' | 'disallowed';
@@ -66,14 +67,25 @@ function sourceRank(source: string, category: string | null, brandIntent: boolea
   return { off: 0, fdc_branded: 1, manufacturer: 2, fdc_foundation: 3, fdc_sr_legacy: 3, fdc: 4, llm: 5 }[source] ?? 6;
 }
 
+// Words that describe prep/form/quality, not the food's identity — ignored when
+// judging how well a product NAME matches an ingredient (and not counted as drift).
+const NON_IDENTITY = new Set([
+  'cooked', 'raw', 'dry', 'dried', 'uncooked', 'fresh', 'boiled', 'roasted', 'steamed', 'canned', 'drained',
+  'chopped', 'sliced', 'smashed', 'cubed', 'crumbled', 'frozen', 'organic', 'whole', 'ground', 'mature',
+  'with', 'without', 'in', 'and', 'or', 'salt', 'water', 'peel', 'seeds', 'seed', 'plain', 'unsweetened',
+]);
+const idTokens = (s: string) =>
+  s.toLowerCase().replace(/[,()]/g, ' ').split(/\s+/).map((w) => w.replace(/s$/, '')).filter((w) => w.length > 2 && !NON_IDENTITY.has(w));
+
+/** 0 = clean identity match; higher = missing tokens or extra "drift" tokens. */
 function matchStrength(name: string, label: string): number {
-  const n = name.toLowerCase();
-  const want = label.toLowerCase().split(/\s+/).filter(Boolean);
-  if (!want.length) return 2;
-  if (n === label.toLowerCase()) return 0;
-  if (want.every((w) => n.includes(w))) return 1;
-  if (want.some((w) => n.includes(w))) return 2;
-  return 3;
+  const want = idTokens(label);
+  const have = idTokens(name);
+  if (!want.length) return 3;
+  const allPresent = want.every((w) => have.some((t) => t.includes(w) || w.includes(t)));
+  if (!allPresent) return want.some((w) => have.some((t) => t.includes(w) || w.includes(t))) ? 4 : 6;
+  const extra = have.filter((t) => !want.some((w) => t.includes(w) || w.includes(t))).length;
+  return Math.min(3, extra); // category drift: "Pickles, cucumber" (extra "pickle") loses to "Cucumber"
 }
 
 export type RankedCandidate = ProductCandidate & {
@@ -82,18 +94,27 @@ export type RankedCandidate = ProductCandidate & {
 
 export function rankCandidates(
   candidates: ProductCandidate[],
-  opts: { label: string; category: string | null; brandIntent: boolean; members: Member[] },
+  opts: {
+    label: string;
+    category: string | null;
+    brandIntent: boolean;
+    members: Member[];
+    ingredientBasis?: 'wet' | 'dry' | 'unknown';
+  },
 ): { ranked: RankedCandidate[]; auto_suggest_index: number | null } {
+  const ingBasis = opts.ingredientBasis ?? 'unknown';
   const scored = candidates.map((c) => {
     const perMember: Record<string, Tag> = {};
     for (const m of opts.members) perMember[m.id] = complianceFor(c, m);
     const hc = householdClass(c, opts.members);
     const keys = [
       hc,
+      c.nutrition.kcal == null ? 1 : 0, // a product with no calories can't fill a nutrition slot
       DIET_CONF[c.diet_status ?? 'unknown'] ?? 3,
+      formMatchScore(ingBasis, c.form ?? null), // cooked-for-cooked beats dry-for-cooked (nutrition basis)
+      matchStrength(c.name, opts.label), // relevance: a clean name match beats a tangential one from a preferred source
       sourceRank(c.analysis_source, opts.category, opts.brandIntent),
       -completenessScore(c),
-      matchStrength(c.name, opts.label),
       c.barcode ?? 'zzz', // deterministic tie-break
     ];
     return { c: { ...c, compliance: { householdClass: hc, perMember } } as RankedCandidate, keys };

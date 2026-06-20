@@ -13,6 +13,7 @@ import {
   searchProducts,
   type ProductCandidate,
 } from '@/lib/product-engine';
+import { formMismatch } from '@/lib/forms';
 
 const DIET_LABEL: Record<number, string> = { 3: 'Vegan', 2: 'Vegetarian', 1: 'Pescetarian', 0: 'Contains animal' };
 function dietBadge(c: ProductCandidate): { label: string; color: string } {
@@ -153,7 +154,13 @@ export function ProductPicker({
                   <ThemedText type="small" themeColor="textSecondary">
                     {c.nutrition.kcal ?? '—'} kcal / {c.serving_size}{c.serving_unit}
                     {c.nutrition.protein != null ? `  ·  ${c.nutrition.protein}g protein` : ''}
+                    {c.form ? `  ·  ${c.form}` : ''}
                   </ThemedText>
+                  {formMismatch(ingredient.label, ingredient.category, c.form ?? null) ? (
+                    <ThemedText type="small" style={{ color: Severity.watch }}>
+                      ⚠ This is {c.form}; the recipe calls for {ingredient.label.match(/\b(cooked|dry|dried|canned)\b/i)?.[0] ?? 'a different form'}
+                    </ThemedText>
+                  ) : null}
                   <View style={styles.badges}>
                     <ThemedText type="smallBold" style={[styles.badge, { color: diet.color, borderColor: diet.color }]}>{diet.label}</ThemedText>
                     <ThemedText type="smallBold" style={[styles.badge, { color: comp.color, borderColor: comp.color }]}>{comp.label}</ThemedText>

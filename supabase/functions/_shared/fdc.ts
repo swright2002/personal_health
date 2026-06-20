@@ -2,6 +2,7 @@
 // (Foundation + SR Legacy); Branded used only to cross-reference a barcode.
 import { EMPTY_NUTRITION, Nutrition, ProductCandidate, round } from './normalize.ts';
 import { leftPad14 } from './gtin.ts';
+import { detectForm } from './forms.ts';
 
 const KEY = Deno.env.get('FDC_API_KEY') || 'DEMO_KEY';
 const BASE = 'https://api.nal.usda.gov/fdc/v1';
@@ -70,6 +71,7 @@ export function normalizeFdc(food: any): ProductCandidate | null {
     allergens: [],
     allergen_traces: [],
     gluten_free: null,
+    form: detectForm(food.description),
     analysis_source: sourceOf(food.dataType),
     source_url: `https://fdc.nal.usda.gov/food-details/${food.fdcId}/nutrients`,
     source_ref: String(food.fdcId),

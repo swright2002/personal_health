@@ -466,6 +466,7 @@ export type Database = {
           diet_status: string | null
           fat: number
           fiber: number
+          form: string | null
           gluten_free: boolean | null
           id: string
           ingredient_id: string
@@ -498,6 +499,7 @@ export type Database = {
           diet_status?: string | null
           fat?: number
           fiber?: number
+          form?: string | null
           gluten_free?: boolean | null
           id?: string
           ingredient_id: string
@@ -530,6 +532,7 @@ export type Database = {
           diet_status?: string | null
           fat?: number
           fiber?: number
+          form?: string | null
           gluten_free?: boolean | null
           id?: string
           ingredient_id?: string

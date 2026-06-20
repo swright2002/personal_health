@@ -25,6 +25,7 @@ export type ProductCandidate = {
   allergen_traces: string[];
   allergens_known?: boolean;
   gluten_free: boolean | null;
+  form?: 'cooked' | 'canned' | 'dry' | 'raw' | null;
   analysis_source: string;
   source_url: string | null;
   source_ref: string | null;
@@ -79,6 +80,7 @@ export async function chooseProduct(params: { householdId: string; ingredientId:
       allergens: c.allergens, allergen_traces: c.allergen_traces, gluten_free: c.gluten_free,
       analysis_source: c.analysis_source, source_url: c.source_url, source_ref: c.source_ref,
       barcode: c.barcode, net_weight_g: c.net_weight_g, servings_per_container: c.servings_per_container,
+      form: c.form ?? null,
     })
     .select('id')
     .single();

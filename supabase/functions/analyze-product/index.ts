@@ -6,9 +6,13 @@ import { fdcSearch } from '../_shared/fdc.ts';
 import { deriveDietAllergen } from '../_shared/diet.ts';
 import { rankCandidates } from '../_shared/ranking.ts';
 import { EMPTY_NUTRITION, per100From, ProductCandidate, publicCandidate, round } from '../_shared/normalize.ts';
+import { ingredientBasis } from '../_shared/forms.ts';
 import { loadFoodTerms, loadMembers } from '../_shared/db.ts';
 
 const ANALYZE_WHOLE_FOOD = new Set(['produce', 'grain', 'legume', 'meat', 'fish', 'dairy', 'oil', 'spice', 'nut']);
+// Plain whole foods of these categories are vegan (used to infer diet for FDC
+// entries that carry no ingredient list). Excludes meat/fish/dairy/sweetener.
+const PLANT_CATS = new Set(['produce', 'grain', 'legume', 'nut', 'oil', 'spice']);
 
 async function extractManufacturer(url: string, anthropicKey?: string): Promise<ProductCandidate | null> {
   if (!anthropicKey) return null;
@@ -79,6 +83,8 @@ Deno.serve(async (req) => {
 
     const [foodTerms, members] = await Promise.all([loadFoodTerms(req), loadMembers(req)]);
 
+    const ingBasis = ingredientBasis(label, category);
+
     let candidates: ProductCandidate[] = [];
     if (mode === 'manufacturer_url') {
       const c = await extractManufacturer(body.url, anthropicKey);
@@ -86,7 +92,10 @@ Deno.serve(async (req) => {
     } else {
       const wholeFood = !brandIntent && category != null && ANALYZE_WHOLE_FOOD.has(category);
       if (wholeFood) {
-        const [fdc, off] = await Promise.all([fdcSearch(query, 'Foundation,SR Legacy', 5), offSearch(query, 8)]);
+        // Surface the right cooked/dry FDC entry: "Quinoa, cooked" vs "uncooked".
+        const formWord = ingBasis === 'wet' ? 'cooked' : ingBasis === 'dry' ? 'dry' : '';
+        const fdcQuery = formWord && !query.toLowerCase().includes(formWord) ? `${query} ${formWord}` : query;
+        const [fdc, off] = await Promise.all([fdcSearch(fdcQuery, 'Foundation,SR Legacy', 6), offSearch(query, 8)]);
         candidates = [...fdc, ...off];
       } else {
         const [off, fdc] = await Promise.all([offSearch(query, 12), fdcSearch(query, 'Branded', 5)]);
@@ -107,9 +116,21 @@ Deno.serve(async (req) => {
     for (const c of candidates) {
       const d = await deriveDietAllergen(c, foodTerms, { useLLM: mode === 'manufacturer_url', anthropicKey });
       Object.assign(c, d);
+      // FDC whole-food entries have no ingredient list, so diet derivation can't
+      // confirm veganness and they'd lose to OFF on compliance — even though a
+      // plain plant food (grain/legume/produce/nut/oil/spice) IS vegan. Infer it
+      // for those so the authoritative-nutrition FDC entry can win on form.
+      if (
+        c.diet_level == null &&
+        (c.analysis_source === 'fdc_foundation' || c.analysis_source === 'fdc_sr_legacy') &&
+        category && PLANT_CATS.has(category)
+      ) {
+        c.diet_level = 3;
+        c.diet_status = 'derived';
+      }
     }
 
-    const { ranked, auto_suggest_index } = rankCandidates(candidates, { label, category, brandIntent, members });
+    const { ranked, auto_suggest_index } = rankCandidates(candidates, { label, category, brandIntent, members, ingredientBasis: ingBasis });
     return json({
       ok: true,
       candidates: ranked.map((c) => ({ ...publicCandidate(c), compliance: (c as any).compliance })),

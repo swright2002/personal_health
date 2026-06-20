@@ -29,6 +29,7 @@ export type ProductCandidate = {
   allergen_traces: string[];
   allergens_known?: boolean; // false/undefined → allergens not assessed (treat as unverified, not clean)
   gluten_free: boolean | null;
+  form?: 'cooked' | 'canned' | 'dry' | 'raw' | null; // cooked/dry state, detected from the name
   analysis_source: string;
   source_url: string | null;
   source_ref: string | null;
