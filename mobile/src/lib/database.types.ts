@@ -409,44 +409,74 @@ export type Database = {
       }
       recipe: {
         Row: {
+          carbs: number | null
           created_at: string
+          fat: number | null
+          fiber: number | null
           household_id: string
           id: string
           img: string | null
+          kcal: number | null
           name: string
           note: string | null
+          nutrition_source: string | null
           prep_time: string | null
+          protein: number | null
           servings: number
           slot: string
           slug: string
+          sodium: number | null
+          source_attribution: string | null
+          source_type: string
+          source_url: string | null
           tags: string[]
           vegan: boolean
         }
         Insert: {
+          carbs?: number | null
           created_at?: string
+          fat?: number | null
+          fiber?: number | null
           household_id: string
           id?: string
           img?: string | null
+          kcal?: number | null
           name: string
           note?: string | null
+          nutrition_source?: string | null
           prep_time?: string | null
+          protein?: number | null
           servings?: number
           slot: string
           slug: string
+          sodium?: number | null
+          source_attribution?: string | null
+          source_type?: string
+          source_url?: string | null
           tags?: string[]
           vegan?: boolean
         }
         Update: {
+          carbs?: number | null
           created_at?: string
+          fat?: number | null
+          fiber?: number | null
           household_id?: string
           id?: string
           img?: string | null
+          kcal?: number | null
           name?: string
           note?: string | null
+          nutrition_source?: string | null
           prep_time?: string | null
+          protein?: number | null
           servings?: number
           slot?: string
           slug?: string
+          sodium?: number | null
+          source_attribution?: string | null
+          source_type?: string
+          source_url?: string | null
           tags?: string[]
           vegan?: boolean
         }
@@ -462,28 +492,40 @@ export type Database = {
       }
       recipe_line: {
         Row: {
+          group_heading: string | null
           id: string
-          ingredient_id: string
+          ingredient_id: string | null
+          name: string | null
+          note: string | null
           position: number
-          quantity: number
+          quantity: number | null
+          raw_text: string | null
           recipe_id: string
-          unit: string
+          unit: string | null
         }
         Insert: {
+          group_heading?: string | null
           id?: string
-          ingredient_id: string
+          ingredient_id?: string | null
+          name?: string | null
+          note?: string | null
           position?: number
-          quantity: number
+          quantity?: number | null
+          raw_text?: string | null
           recipe_id: string
-          unit: string
+          unit?: string | null
         }
         Update: {
+          group_heading?: string | null
           id?: string
-          ingredient_id?: string
+          ingredient_id?: string | null
+          name?: string | null
+          note?: string | null
           position?: number
-          quantity?: number
+          quantity?: number | null
+          raw_text?: string | null
           recipe_id?: string
-          unit?: string
+          unit?: string | null
         }
         Relationships: [
           {

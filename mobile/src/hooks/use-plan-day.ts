@@ -140,12 +140,12 @@ export function usePlanDay(date: string) {
       const recipeNutr = new Map<string, Nutrition>();
       for (const r of recipes) {
         const inputs = (linesByRecipe.get(r.id) ?? []).map((l) => {
-          const p = productByIngredient.get(l.ingredient_id);
+          const p = l.ingredient_id ? productByIngredient.get(l.ingredient_id) : undefined;
           return {
             n: p
               ? { kcal: p.kcal, protein: p.protein, carbs: p.carbs, fat: p.fat, fiber: p.fiber }
               : ZERO_NUTRITION,
-            quantity: l.quantity,
+            quantity: l.quantity ?? 0,
             servingSize: p?.serving_size ?? 1,
           };
         });
