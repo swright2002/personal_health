@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 
@@ -7,8 +7,9 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand, Members, Radius, Severity, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlanDay, type PlanMeal, type PlanTarget } from '@/hooks/use-plan-day';
+import { useRecipes, type LibraryRecipe, type RecipeSlot } from '@/hooks/use-recipes';
 import { useAuth } from '@/lib/auth';
-import { removeFromPlan } from '@/lib/plan';
+import { removeFromPlan, swapMeal } from '@/lib/plan';
 import { PLAN_WEEK, dayNumber, formatDay, isRunDay, usePlanDate, weekdayShort } from '@/lib/plan-date';
 
 const TARGET_LABEL: Record<PlanTarget['kind'], string> = {
@@ -17,12 +18,18 @@ const TARGET_LABEL: Record<PlanTarget['kind'], string> = {
   maintenance: 'Vegan maintenance',
 };
 
+const SLOTS: RecipeSlot[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+
 export default function PlanScreen() {
   const theme = useTheme();
   const { member } = useAuth();
   const { date, setDate } = usePlanDate();
   const { data, loading, error, refetch } = usePlanDay(date);
+  const [wantRecipes, setWantRecipes] = useState(false);
+  const { data: recipes } = useRecipes({ enabled: wantRecipes });
   const [personId, setPersonId] = useState<string | null>(null);
+  const [swapping, setSwapping] = useState<PlanMeal | null>(null);
+  const [swapError, setSwapError] = useState<string | null>(null);
 
   // Refresh when the tab regains focus (e.g. after adding a recipe in Recipes).
   useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
@@ -37,6 +44,26 @@ export default function PlanScreen() {
     const m = data?.members.find((x) => x.id === personId);
     return m?.accentColor ?? Brand.accent;
   }, [data, personId]);
+  const viewerDiet = useMemo(
+    () => data?.members.find((x) => x.id === personId)?.diet ?? null,
+    [data, personId],
+  );
+
+  async function handleSwapPick(recipeId: string) {
+    if (!swapping || !personId) return;
+    if (recipeId === swapping.recipeId) {
+      setSwapping(null); // re-picked the current recipe — nothing to change
+      return;
+    }
+    setSwapError(null);
+    const { error } = await swapMeal({ momentId: swapping.momentId, memberId: personId, recipeId });
+    if (error) {
+      setSwapError(error); // keep the sheet open so the failure is visible
+      return;
+    }
+    setSwapping(null);
+    refetch();
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -96,6 +123,11 @@ export default function PlanScreen() {
                   meal={meal}
                   color={personColor}
                   background={theme.backgroundElement}
+                  onSwap={() => {
+                    setSwapError(null);
+                    setWantRecipes(true);
+                    setSwapping(meal);
+                  }}
                   onRemove={() => {
                     if (personId) removeFromPlan(meal.momentId, personId).then(refetch);
                   }}
@@ -105,6 +137,21 @@ export default function PlanScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      {swapping ? (
+        <SwapSheet
+          key={swapping.momentId}
+          meal={swapping}
+          recipes={recipes}
+          viewerDiet={viewerDiet}
+          error={swapError}
+          onPick={handleSwapPick}
+          onClose={() => {
+            setSwapError(null);
+            setSwapping(null);
+          }}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -258,11 +305,13 @@ function MealCard({
   meal,
   color,
   background,
+  onSwap,
   onRemove,
 }: {
   meal: PlanMeal;
   color: string;
   background: string;
+  onSwap: () => void;
   onRemove: () => void;
 }) {
   return (
@@ -277,6 +326,11 @@ function MealCard({
               Together
             </ThemedText>
           ) : null}
+          <Pressable onPress={onSwap} hitSlop={8}>
+            <ThemedText type="smallBold" style={styles.mealSwap}>
+              Swap
+            </ThemedText>
+          </Pressable>
           <Pressable onPress={onRemove} hitSlop={8}>
             <ThemedText type="smallBold" style={styles.removeX}>
               ×
@@ -289,6 +343,164 @@ function MealCard({
         <ThemedText type="small" themeColor="textSecondary">
           {meal.kcal} kcal
         </ThemedText>
+      </View>
+    </View>
+  );
+}
+
+function Chip({
+  label,
+  active,
+  accent = Brand.accent,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  accent?: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.chip, { borderColor: Brand.hairline }, active && { backgroundColor: accent, borderColor: accent }]}>
+      <ThemedText type="smallBold" style={{ color: active ? '#fff' : Brand.deep }}>
+        {label}
+      </ThemedText>
+    </Pressable>
+  );
+}
+
+/** Full-screen recipe picker for replacing one planned meal. */
+function SwapSheet({
+  meal,
+  recipes,
+  viewerDiet,
+  error,
+  onPick,
+  onClose,
+}: {
+  meal: PlanMeal;
+  recipes: LibraryRecipe[] | null;
+  viewerDiet: string | null;
+  error: string | null;
+  onPick: (recipeId: string) => void;
+  onClose: () => void;
+}) {
+  const theme = useTheme();
+  const [query, setQuery] = useState('');
+  const [veganOnly, setVeganOnly] = useState((viewerDiet ?? '').toLowerCase() === 'vegan');
+  const [slot, setSlot] = useState<'all' | RecipeSlot>(
+    (SLOTS as string[]).includes(meal.slot) ? (meal.slot as RecipeSlot) : 'all',
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (recipes ?? []).filter((r) => {
+      if (veganOnly && !r.vegan) return false;
+      if (slot !== 'all' && r.slot !== slot) return false;
+      if (q && !`${r.name} ${r.tags.join(' ')}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [recipes, query, veganOnly, slot]);
+
+  return (
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }]}>
+      <View style={{ flex: 1 }}>
+        <View style={styles.modalBar}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            SWAP {meal.label.toUpperCase()}
+          </ThemedText>
+          <Pressable onPress={onClose} hitSlop={8}>
+            <ThemedText type="smallBold" style={{ color: Brand.accent }}>
+              Cancel
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        {error ? (
+          <ThemedText type="small" style={styles.swapError}>
+            Couldn’t swap — {error}
+          </ThemedText>
+        ) : null}
+
+        <View style={styles.swapHead}>
+          <ThemedText type="small" themeColor="textSecondary">
+            Replacing
+          </ThemedText>
+          <ThemedText style={styles.swapCurrent}>{meal.recipeName}</ThemedText>
+
+          <TextInput
+            style={[styles.search, { borderColor: Brand.hairline, color: theme.text, backgroundColor: theme.backgroundElement }]}
+            placeholder="Search recipes & tags"
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={query}
+            onChangeText={setQuery}
+          />
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            <Chip label="Any" active={slot === 'all'} onPress={() => setSlot('all')} />
+            {SLOTS.map((s) => (
+              <Chip key={s} label={s} active={slot === s} onPress={() => setSlot(s)} />
+            ))}
+            <Chip label="Vegan" active={veganOnly} accent={Severity.good} onPress={() => setVeganOnly((v) => !v)} />
+          </ScrollView>
+        </View>
+
+        {recipes == null ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={Brand.accent} />
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={styles.swapList}>
+            {filtered.map((r) => {
+              const current = r.id === meal.recipeId;
+              return (
+                <Pressable
+                  key={r.id}
+                  onPress={() => onPick(r.id)}
+                  style={[styles.swapRow, { backgroundColor: theme.backgroundElement }, current && { borderColor: Brand.accent, borderWidth: 1 }]}>
+                  <View style={styles.swapRowTop}>
+                    <ThemedText type="smallBold" style={styles.slot}>
+                      {r.slot.toUpperCase()}
+                    </ThemedText>
+                    {r.vegan ? (
+                      <ThemedText type="smallBold" style={[styles.tag, { color: Severity.good, borderColor: Severity.good }]}>
+                        Vegan
+                      </ThemedText>
+                    ) : null}
+                  </View>
+                  <ThemedText style={styles.swapName}>
+                    {r.name}
+                    {current ? '  · current' : ''}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {[r.kcal != null ? `${Math.round(r.kcal)} kcal` : null, `serves ${r.servings}`].filter(Boolean).join('  ·  ')}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+            {filtered.length === 0 ? (
+              <View style={styles.center}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  No recipes match these filters.
+                </ThemedText>
+                <Pressable
+                  onPress={() => {
+                    setSlot('all');
+                    setVeganOnly(false);
+                    setQuery('');
+                  }}
+                  hitSlop={8}>
+                  <ThemedText type="smallBold" style={{ color: Brand.accent, marginTop: Spacing.two }}>
+                    Show all recipes
+                  </ThemedText>
+                </Pressable>
+              </View>
+            ) : null}
+          </ScrollView>
+        )}
       </View>
     </View>
   );
@@ -335,7 +547,8 @@ const styles = StyleSheet.create({
   },
   mealCard: { gap: Spacing.two },
   mealHeadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  mealHeadRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  mealHeadRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  mealSwap: { color: Brand.accent, fontSize: 13 },
   removeX: { color: Brand.deep, fontSize: 18, lineHeight: 18 },
   mealLabel: {
     textTransform: 'uppercase',
@@ -352,4 +565,31 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     fontSize: 11,
   },
+  // Swap picker
+  modalBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.one,
+  },
+  swapError: { color: Severity.watch, paddingHorizontal: Spacing.four, paddingTop: Spacing.one },
+  swapHead: { paddingHorizontal: Spacing.four, gap: Spacing.two, paddingBottom: Spacing.two },
+  swapCurrent: { fontSize: 18, fontWeight: '800' },
+  search: {
+    borderWidth: 1,
+    borderRadius: Radius.control,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    fontSize: 15,
+    marginTop: Spacing.one,
+  },
+  chipRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center', paddingVertical: Spacing.half },
+  chip: { borderWidth: 1, borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: 6 },
+  swapList: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.two },
+  swapRow: { borderRadius: Radius.card, padding: Spacing.three, gap: 2 },
+  swapRowTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  swapName: { fontSize: 15, fontWeight: '700' },
+  slot: { textTransform: 'uppercase', letterSpacing: 0.6, color: Brand.deep, fontSize: 12 },
 });

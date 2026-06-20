@@ -25,6 +25,27 @@ export async function addRecipeToPlan(params: {
   return { error: assignment.error?.message ?? null };
 }
 
+/**
+ * Replace the recipe on one member's planned meal, keeping its slot/position/
+ * servings. Atomic (one transaction via the `swap_meal` RPC): if the meal was
+ * "Together"/shared it's broken apart to that member's own dish, but only when
+ * the recipe actually changes — re-picking the current recipe is a no-op and
+ * never strips the Together grouping. Errors if there's no assignment to swap.
+ */
+export async function swapMeal(params: {
+  momentId: string;
+  memberId: string;
+  recipeId: string;
+}): Promise<{ error: string | null }> {
+  const { momentId, memberId, recipeId } = params;
+  const { error } = await supabase.rpc('swap_meal', {
+    p_moment_id: momentId,
+    p_member_id: memberId,
+    p_recipe_id: recipeId,
+  });
+  return { error: error?.message ?? null };
+}
+
 /** Remove a member from a moment; drop the moment if no one's left on it. */
 export async function removeFromPlan(momentId: string, memberId: string): Promise<{ error: string | null }> {
   const del = await supabase.from('moment_assignment').delete().eq('moment_id', momentId).eq('member_id', memberId);

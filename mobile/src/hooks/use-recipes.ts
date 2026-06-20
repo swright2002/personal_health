@@ -21,12 +21,14 @@ export type LibraryRecipe = {
   source_attribution: string | null;
 };
 
-export function useRecipes() {
+export function useRecipes(opts?: { enabled?: boolean }) {
+  const enabled = opts?.enabled ?? true;
   const [data, setData] = useState<LibraryRecipe[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     (async () => {
       const res = await supabase
@@ -43,7 +45,7 @@ export function useRecipes() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [enabled]);
 
   return { data, loading, error };
 }

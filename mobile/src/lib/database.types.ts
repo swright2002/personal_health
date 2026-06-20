@@ -700,6 +700,10 @@ export type Database = {
     }
     Functions: {
       current_household_id: { Args: never; Returns: string }
+      swap_meal: {
+        Args: { p_member_id: string; p_moment_id: string; p_recipe_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
