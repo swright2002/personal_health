@@ -116,11 +116,14 @@ Each runs as an Edge Function on `claude-opus-4-8`, replacing the prototype's pa
 
 ### Getting recipes in (the prototype hardcodes ~8 — we need real input)
 
-1. **Manual recipe editor** — a form: name, slot, **base servings**, tags; add ingredient lines (ingredient + quantity + unit). The always-there baseline.
-2. **AI-assisted import (the convenience win, reuses Opus 4.8)** — paste a recipe URL or raw text; an extraction step parses it into recipe + ordered ingredient lines (qty, unit, ingredient) + base servings. Unknown ingredients get created and mapped to a default product; that product's nutrition comes from a **food database** (USDA FoodData Central / Open Food Facts), with an LLM estimate as fallback.
-3. **Seed catalog** — import the prototype's recipes + a curated starter set so day one isn't empty.
+> **Full design: [`docs/recipe-and-product-sourcing.md`](docs/recipe-and-product-sourcing.md)** — sourcing pipelines, the learned ingredient→product mapping, the diet/allergen model, and the additive schema (migration `0005`) they require.
 
-Recurring hard part for all three: mapping each line's abstract ingredient to a **product with a real label** (nutrition + price). LLM normalizes the text; the food database supplies the numbers.
+1. **Manual recipe editor** — name, slot, **base servings**, tags; ingredient lines (ingredient + quantity + unit). The always-there baseline.
+2. **URL import** — paste a recipe URL → an Edge Function reads the page's **schema.org/Recipe JSON-LD** (near-universal on food blogs, incl. loveandlemons/ohsheglows), falling back to **Claude Haiku** only for messy pages. ~$0.008/recipe.
+3. **Photo import** — photograph a cookbook page → **Claude Opus 4.8 vision** extracts a structured recipe (no OCR step); always lands in a review screen. ~$0.02–0.05/photo.
+4. **Seed catalog** — the prototype's recipes + a curated starter set so day one isn't empty.
+
+The recurring hard part — mapping each abstract ingredient to a **real product** (nutrition + ingredient list + price) — is solved by **learned preferences** (choose a product once per ingredient; it auto-applies, overridable per recipe/member) plus **Open Food Facts → USDA FoodData Central → Claude-gap-fill** for the product data. Product ingredient lists drive **allergen** flags (FDA Big 9) and **diet** fit (vegan/vegetarian/pescetarian), filtered per member. See the design doc.
 
 ### Scaling for 1 or 2 people
 
@@ -138,7 +141,7 @@ Nuance to bake in: **nutrition scales exactly (fractional ok); shopping rounds u
 - **M0 — Foundations.** Repo; Expo app + Expo Router shell; Supabase project; auth (two accounts, one household); theme/design tokens; member-switch driven by login.
 - **M1 — Data model + seed.** Implement the schema above; migrate the prototype's sample recipes/ingredients/products/day as seed data; RLS so household members see shared data.
 - **M2 — Meal module UI.** The five screens on real data: Plan (targets + day), Recipes library, Recipe detail (product picker → live computed nutrition), Shopping (generated, grouped, realtime checkoff). Plus a **manual recipe editor** and **plan-time serving scaling**. Manual weigh-in/run entry stub in Coach.
-- **M2.5 — AI-assisted recipe import.** Paste URL/text → Opus 4.8 extracts a structured recipe; ingredient→product mapping + nutrition lookup from a food database.
+- **M2.5 — Recipe & product sourcing.** URL import (schema.org JSON-LD + Claude fallback) and cookbook-photo import (Opus 4.8 vision); **learned** ingredient→product mapping; Open Food Facts / USDA FoodData Central product data with **allergen + diet** analysis (Claude gap-fill); barcode scan. Adds additive migration `0005`. Design: [`docs/recipe-and-product-sourcing.md`](docs/recipe-and-product-sourcing.md).
 - **M3 — Agents.** Coach + Nutritionist via Edge Functions on Opus 4.8 with real tools (read/mutate plan, measurements, goals); live Nutritionist review; agent handoff.
 - **M4 — Apple Health backbone.** HealthKit reads (steps, active energy, weight, resting HR, workouts) via Expo native module → sync to Supabase; auto-fill run days + weight trend; Coach reads it.
 - **M5+ — Running / Weight / Sleep modules.** Dedicated screens on top of the now-populated health data; Coach reasons across domains.
@@ -148,7 +151,9 @@ Nuance to bake in: **nutrition scales exactly (fractional ok); shopping rounds u
 ## 7. Product decisions to confirm (not blocking)
 
 - ✓ **Leftovers / batch cooking — decided:** build leftover-ready, ship simple first (see §2c). `servings` live in v1; `cooked_servings` / `leftover_source` reserved as nullable, off in v1.
-- **Recipe-import nutrition source:** food database (USDA FoodData Central / Open Food Facts) vs LLM estimate as the default label for a newly imported ingredient.
+- ✓ **Recipe-import nutrition source — decided:** Open Food Facts (primary, has ingredient lists + allergen/diet tags) → USDA FoodData Central (CC0 fallback) → Claude gap-fill for diet/allergen. Spoonacular/Edamam ruled out (ToS forbids a stored product DB). See `docs/recipe-and-product-sourcing.md` §2.
+- ✓ **Allergen & diet model — decided:** FDA Big 9 allergens (EU-14-extensible), `gluten_free` as a separate restriction, diet hierarchy omnivore⊃pescetarian⊃vegetarian⊃vegan, fail-closed. Filtered per member. See design doc §4.
 - **"Together" semantics:** soft flag (split = independent copies, the prototype's behavior) vs hard link (edit once, updates for both). The handoff flags this as a user decision.
 - **Theme:** ship one look (recommend Look A · Coastal) or keep the A/B toggle.
 - **Targets source:** how run days are determined long-term (manual vs driven by HealthKit activity).
+- ✓ **Commercialization — researched:** Harbor *can* plausibly be sold; the safe model is **charge for software over user-clipped, private content** with a **facts-in / expression-out** import pipeline (store factual ingredients/nutrition, regenerate steps, never re-host source photos, private per-user collection). Full risk register + "do now while personal vs. must change before selling" checklists: [`docs/commercialization-and-legal.md`](docs/commercialization-and-legal.md). Still personal-use; this just keeps the door open cheaply.
