@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Severity, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { supabase } from '@/lib/supabase';
 import { useRecipes, type LibraryRecipe, type RecipeSlot } from '@/hooks/use-recipes';
 
 const SLOTS: RecipeSlot[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
@@ -16,6 +17,7 @@ export default function RecipesScreen() {
   const [query, setQuery] = useState('');
   const [diet, setDiet] = useState<'all' | 'vegan'>('all');
   const [slot, setSlot] = useState<'all' | RecipeSlot>('all');
+  const [open, setOpen] = useState<LibraryRecipe | null>(null);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -75,7 +77,7 @@ export default function RecipesScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.list}>
           {filtered.map((r) => (
-            <RecipeCard key={r.id} r={r} background={theme.backgroundElement} />
+            <RecipeCard key={r.id} r={r} background={theme.backgroundElement} onPress={() => setOpen(r)} />
           ))}
           {filtered.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
@@ -84,6 +86,8 @@ export default function RecipesScreen() {
           ) : null}
         </ScrollView>
       )}
+
+      <RecipeDetailModal recipe={open} library={data ?? []} onOpen={setOpen} onClose={() => setOpen(null)} />
     </SafeAreaView>
   );
 }
@@ -100,19 +104,20 @@ function Chip({ label, active, accent = Brand.accent, onPress }: { label: string
   );
 }
 
-function RecipeCard({ r, background }: { r: LibraryRecipe; background: string }) {
-  const kcal = num(r.kcal);
-  const protein = num(r.protein);
-  const fiber = num(r.fiber);
-  const stats: string[] = [];
-  if (kcal != null) stats.push(`${kcal} kcal`);
-  if (protein != null) stats.push(`${protein}g protein`);
-  if (fiber != null) stats.push(`${fiber}g fiber`);
-  if (stats.length === 0 && r.prep_time) stats.push(r.prep_time);
-  stats.push(`serves ${r.servings}`);
+function statLine(r: LibraryRecipe): string {
+  const parts: string[] = [];
+  const kcal = num(r.kcal), protein = num(r.protein), fiber = num(r.fiber);
+  if (kcal != null) parts.push(`${kcal} kcal`);
+  if (protein != null) parts.push(`${protein}g protein`);
+  if (fiber != null) parts.push(`${fiber}g fiber`);
+  if (parts.length === 0 && r.prep_time) parts.push(r.prep_time);
+  parts.push(`serves ${r.servings}`);
+  return parts.join('  ·  ');
+}
 
+function RecipeCard({ r, background, onPress }: { r: LibraryRecipe; background: string; onPress: () => void }) {
   return (
-    <View style={[styles.card, { backgroundColor: background }]}>
+    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: background }]}>
       <View style={styles.cardTop}>
         <ThemedText type="smallBold" style={styles.slot}>
           {r.slot.toUpperCase()}
@@ -123,30 +128,152 @@ function RecipeCard({ r, background }: { r: LibraryRecipe; background: string })
           </ThemedText>
         ) : null}
       </View>
-
       <ThemedText style={styles.name}>{r.name}</ThemedText>
-
       {r.tags.length ? (
         <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
           {r.tags.slice(0, 3).join(' · ')}
         </ThemedText>
       ) : null}
-
       <ThemedText type="small" themeColor="textSecondary" style={styles.stats}>
-        {stats.join('  ·  ')}
+        {statLine(r)}
       </ThemedText>
+    </Pressable>
+  );
+}
 
-      {r.source_url ? (
-        <Pressable onPress={() => Linking.openURL(r.source_url!)} hitSlop={6}>
-          <ThemedText type="small" style={{ color: Brand.accent }}>
-            {r.source_attribution ?? 'Source'} ↗
+// ── Detail view (modal) ─────────────────────────────────────────────────────
+
+type DetailLine = { text: string; heading: boolean; component: LibraryRecipe | null };
+
+function isHeading(t: string): boolean {
+  const s = t.trim();
+  if (!s) return false;
+  if (s.endsWith(':')) return true;
+  return /^[A-Z0-9 &'’-]{2,32}$/.test(s) && s === s.toUpperCase() && /[A-Z]/.test(s);
+}
+
+function matchComponent(text: string, library: LibraryRecipe[], currentId: string): LibraryRecipe | null {
+  const t = text.toLowerCase();
+  let best: LibraryRecipe | null = null;
+  for (const r of library) {
+    if (r.id === currentId) continue;
+    const n = r.name.toLowerCase();
+    if (n.length >= 7 && t.includes(n) && (!best || r.name.length > best.name.length)) best = r;
+  }
+  return best;
+}
+
+function RecipeDetailModal({
+  recipe,
+  library,
+  onOpen,
+  onClose,
+}: {
+  recipe: LibraryRecipe | null;
+  library: LibraryRecipe[];
+  onOpen: (r: LibraryRecipe) => void;
+  onClose: () => void;
+}) {
+  const theme = useTheme();
+  const [lines, setLines] = useState<DetailLine[] | null>(null);
+
+  useEffect(() => {
+    if (!recipe) return;
+    setLines(null);
+    let active = true;
+    supabase
+      .from('recipe_line')
+      .select('raw_text,name,quantity,unit,position,ingredient(label)')
+      .eq('recipe_id', recipe.id)
+      .order('position')
+      .then(({ data }) => {
+        if (!active) return;
+        const built = (data ?? []).map((l): DetailLine => {
+          const ing = Array.isArray(l.ingredient) ? l.ingredient[0] : l.ingredient;
+          const text =
+            l.raw_text ??
+            (ing?.label ? [l.quantity, l.unit, ing.label].filter(Boolean).join(' ') : l.name ?? '');
+          const heading = isHeading(text);
+          return { text, heading, component: heading ? null : matchComponent(text, library, recipe.id) };
+        });
+        setLines(built);
+      });
+    return () => {
+      active = false;
+    };
+  }, [recipe, library]);
+
+  if (!recipe) return null;
+  const r = recipe;
+
+  return (
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }]}>
+      <View style={styles.modalBar}>
+          <Pressable onPress={onClose} hitSlop={8}>
+            <ThemedText type="smallBold" style={{ color: Brand.accent }}>
+              Done
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.detailScroll}>
+          <View style={styles.cardTop}>
+            <ThemedText type="smallBold" style={styles.slot}>
+              {r.slot.toUpperCase()}
+            </ThemedText>
+            {r.vegan ? (
+              <ThemedText type="smallBold" style={[styles.veganBadge, { color: Severity.good, borderColor: Severity.good }]}>
+                Vegan
+              </ThemedText>
+            ) : null}
+          </View>
+
+          <ThemedText type="subtitle" style={styles.detailName}>
+            {r.name}
           </ThemedText>
-        </Pressable>
-      ) : r.source_attribution ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {r.source_attribution}
-        </ThemedText>
-      ) : null}
+          <ThemedText type="small" themeColor="textSecondary">
+            {statLine(r)}
+          </ThemedText>
+          {r.source_url ? (
+            <Pressable onPress={() => Linking.openURL(r.source_url!)} hitSlop={6}>
+              <ThemedText type="small" style={{ color: Brand.accent }}>
+                {r.source_attribution ?? 'Source'} ↗
+              </ThemedText>
+            </Pressable>
+          ) : r.source_attribution ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {r.source_attribution}
+            </ThemedText>
+          ) : null}
+
+          <ThemedText type="smallBold" style={styles.ingHeading}>
+            Ingredients
+          </ThemedText>
+
+          {lines == null ? (
+            <ActivityIndicator color={Brand.accent} style={{ marginTop: Spacing.three }} />
+          ) : (
+            <View style={styles.ingList}>
+              {lines.map((l, i) =>
+                l.heading ? (
+                  <ThemedText key={i} type="smallBold" style={styles.lineHeading}>
+                    {l.text.replace(/:$/, '')}
+                  </ThemedText>
+                ) : l.component ? (
+                  <Pressable key={i} onPress={() => onOpen(l.component!)}>
+                    <ThemedText type="small" style={{ color: Brand.accent }}>
+                      {l.text}  →
+                    </ThemedText>
+                  </Pressable>
+                ) : (
+                  <ThemedText key={i} type="small" themeColor="text">
+                    {l.text}
+                  </ThemedText>
+                ),
+              )}
+            </View>
+          )}
+        </ScrollView>
     </View>
   );
 }
@@ -173,4 +300,10 @@ const styles = StyleSheet.create({
   veganBadge: { borderWidth: 1, borderRadius: Radius.pill, paddingHorizontal: Spacing.two, paddingVertical: 1, fontSize: 11 },
   name: { fontSize: 16, fontWeight: '700' },
   stats: { marginTop: Spacing.half },
+  modalBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.four, paddingTop: Spacing.two },
+  detailScroll: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.two },
+  detailName: { marginTop: Spacing.one },
+  ingHeading: { fontSize: 17, fontWeight: '800', marginTop: Spacing.four },
+  ingList: { gap: Spacing.two, marginTop: Spacing.one },
+  lineHeading: { textTransform: 'uppercase', letterSpacing: 0.5, color: Brand.deep, fontSize: 12, marginTop: Spacing.two },
 });
