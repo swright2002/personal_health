@@ -5,6 +5,9 @@ dist/
 web-build/
 *.tsbuildinfo
 
+# Local dev tooling (Playwright web preview — not part of the app)
+.devtools/
+
 # Env / secrets — never commit keys (Anthropic key lives in Supabase Edge Function secrets)
 .env
 .env*.local
