@@ -7,7 +7,8 @@ import { Brand, Radius, Severity, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import { PLAN_DATE, addRecipeToPlan } from '@/lib/plan';
+import { addRecipeToPlan } from '@/lib/plan';
+import { formatDay, usePlanDate } from '@/lib/plan-date';
 import { useRecipes, type LibraryRecipe, type RecipeSlot } from '@/hooks/use-recipes';
 
 const SLOTS: RecipeSlot[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
@@ -196,6 +197,7 @@ function RecipeDetailModal({
   onClose: () => void;
 }) {
   const theme = useTheme();
+  const { date } = usePlanDate();
   const [lines, setLines] = useState<DetailLine[] | null>(null);
   const [added, setAdded] = useState<string | null>(null);
 
@@ -272,29 +274,34 @@ function RecipeDetailModal({
           {householdId && members.length ? (
             added ? (
               <ThemedText type="smallBold" style={[styles.addedMsg, { color: Severity.good }]}>
-                Added to {added} day ✓
+                Added to {added} day · {formatDay(date)} ✓
               </ThemedText>
             ) : (
-              <View style={styles.addRow}>
-                {members.map((m) => (
-                  <Pressable
-                    key={m.id}
-                    onPress={async () => {
-                      const { error } = await addRecipeToPlan({
-                        householdId,
-                        date: PLAN_DATE,
-                        memberId: m.id,
-                        recipeId: r.id,
-                        slot: r.slot,
-                      });
-                      if (!error) setAdded(m.id === youId ? 'your' : `${m.name}’s`);
-                    }}
-                    style={[styles.addBtn, { backgroundColor: Brand.accent }]}>
-                    <ThemedText type="smallBold" style={{ color: '#fff' }}>
-                      + Add to {m.id === youId ? 'your' : `${m.name}’s`} day
-                    </ThemedText>
-                  </Pressable>
-                ))}
+              <View style={styles.addBlock}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Add to your plan · {formatDay(date)}
+                </ThemedText>
+                <View style={styles.addRow}>
+                  {members.map((m) => (
+                    <Pressable
+                      key={m.id}
+                      onPress={async () => {
+                        const { error } = await addRecipeToPlan({
+                          householdId,
+                          date,
+                          memberId: m.id,
+                          recipeId: r.id,
+                          slot: r.slot,
+                        });
+                        if (!error) setAdded(m.id === youId ? 'your' : `${m.name}’s`);
+                      }}
+                      style={[styles.addBtn, { backgroundColor: Brand.accent }]}>
+                      <ThemedText type="smallBold" style={{ color: '#fff' }}>
+                        + Add to {m.id === youId ? 'your' : `${m.name}’s`} day
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
               </View>
             )
           ) : null}
@@ -356,7 +363,8 @@ const styles = StyleSheet.create({
   modalBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.four, paddingTop: Spacing.two },
   detailScroll: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.two },
   detailName: { marginTop: Spacing.one },
-  addRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.three },
+  addBlock: { marginTop: Spacing.three, gap: Spacing.two },
+  addRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   addBtn: { borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
   addedMsg: { marginTop: Spacing.three },
   ingHeading: { fontSize: 17, fontWeight: '800', marginTop: Spacing.four },

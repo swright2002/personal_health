@@ -7,6 +7,7 @@ import AppTabs from '@/components/app-tabs';
 import { SignInScreen } from '@/components/sign-in-screen';
 import { Brand, Colors } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { PlanDateProvider } from '@/lib/plan-date';
 
 const CoastalLight = {
   ...DefaultTheme,
@@ -25,8 +26,10 @@ export default function TabLayout() {
     <SafeAreaProvider>
       <ThemeProvider value={CoastalLight}>
         <AuthProvider>
-          <AnimatedSplashOverlay />
-          <RootGate />
+          <PlanDateProvider>
+            <AnimatedSplashOverlay />
+            <RootGate />
+          </PlanDateProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

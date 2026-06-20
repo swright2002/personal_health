@@ -8,7 +8,8 @@ import { Brand, Members, Radius, Severity, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePlanDay, type PlanMeal, type PlanTarget } from '@/hooks/use-plan-day';
 import { useAuth } from '@/lib/auth';
-import { PLAN_DATE, removeFromPlan } from '@/lib/plan';
+import { removeFromPlan } from '@/lib/plan';
+import { PLAN_WEEK, dayNumber, formatDay, isRunDay, usePlanDate, weekdayShort } from '@/lib/plan-date';
 
 const TARGET_LABEL: Record<PlanTarget['kind'], string> = {
   run_day: 'Run day',
@@ -16,18 +17,11 @@ const TARGET_LABEL: Record<PlanTarget['kind'], string> = {
   maintenance: 'Vegan maintenance',
 };
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function formatDate(date: string): string {
-  const [y, m, d] = date.split('-').map(Number);
-  const dt = new Date(y, m - 1, d);
-  return `${WEEKDAYS[dt.getDay()]}, ${MONTHS[m - 1]} ${d}`;
-}
-
 export default function PlanScreen() {
   const theme = useTheme();
   const { member } = useAuth();
-  const { data, loading, error, refetch } = usePlanDay(PLAN_DATE);
+  const { date, setDate } = usePlanDate();
+  const { data, loading, error, refetch } = usePlanDay(date);
   const [personId, setPersonId] = useState<string | null>(null);
 
   // Refresh when the tab regains focus (e.g. after adding a recipe in Recipes).
@@ -48,9 +42,11 @@ export default function PlanScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <ThemedText type="smallBold" themeColor="textSecondary" style={styles.kicker}>
-          {formatDate(PLAN_DATE).toUpperCase()}
+          {formatDay(date).toUpperCase()}
         </ThemedText>
         <ThemedText type="subtitle">Plan</ThemedText>
+
+        <WeekStrip selected={date} onSelect={setDate} />
 
         {loading ? (
           <View style={styles.center}>
@@ -110,6 +106,38 @@ export default function PlanScreen() {
         ) : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function WeekStrip({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
+  return (
+    <View style={styles.weekStrip}>
+      {PLAN_WEEK.map((d) => {
+        const active = d === selected;
+        return (
+          <Pressable
+            key={d}
+            onPress={() => onSelect(d)}
+            style={[
+              styles.dayBtn,
+              { borderColor: Brand.hairline },
+              active && { backgroundColor: Brand.accent, borderColor: Brand.accent },
+            ]}>
+            <ThemedText type="small" style={{ color: active ? '#fff' : Brand.deep, fontSize: 11 }}>
+              {weekdayShort(d)}
+            </ThemedText>
+            <ThemedText type="smallBold" style={{ color: active ? '#fff' : Brand.deep, fontSize: 15 }}>
+              {dayNumber(d)}
+            </ThemedText>
+            <ThemedText
+              type="smallBold"
+              style={{ color: active ? '#fff' : Brand.accent, fontSize: 8, opacity: isRunDay(d) ? 1 : 0 }}>
+              RUN
+            </ThemedText>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -270,6 +298,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.three },
   kicker: { letterSpacing: 1, marginTop: Spacing.two },
+  weekStrip: { flexDirection: 'row', gap: Spacing.one, marginTop: Spacing.three },
+  dayBtn: { flex: 1, borderWidth: 1, borderRadius: Radius.control, paddingVertical: Spacing.two, alignItems: 'center', gap: 1 },
   center: { paddingVertical: Spacing.six, alignItems: 'center' },
   switcher: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
   pill: {

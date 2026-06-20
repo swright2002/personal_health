@@ -1,9 +1,6 @@
 /** Plan-day helpers shared by the Plan and Recipes screens. */
 import { supabase } from './supabase';
 
-/** The demo plan day shown on the Plan screen (until a week selector lands). */
-export const PLAN_DATE = '2026-06-18';
-
 const SLOT_POSITION: Record<string, number> = { Breakfast: 10, Lunch: 20, Dinner: 30, Snack: 40 };
 
 /** Add a recipe to one member's day as a new (separate) moment. */

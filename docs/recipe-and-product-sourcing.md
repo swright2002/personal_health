@@ -82,6 +82,20 @@ We need three things **per product**: per-serving nutrition, the **full ingredie
 2. **Parse the ingredient text** for the FDA **Big 9** (milk, egg, fish, crustacean shellfish, tree nuts, peanuts, wheat, soybeans, **sesame**) via a keyword/`food_term` dictionary (casein→milk, semolina→wheat…).
 3. **Claude Opus 4.8 classifies the gaps** — when OFF is `unknown`/`maybe`, when the product came from FDC (no diet flags), or to compute **pescetarian**. Opus catches hidden non-vegan items keyword lists miss (gelatin, carmine, rennet, isinglass, shellac, L-cysteine). Output strict JSON; surface genuinely ambiguous items (mono/diglycerides, "natural flavors", enzymes) as **`maybe`, never a hard claim**. LLM = screening, not a safety guarantee.
 
+### 2a. One food, many barcodes (package/size variants)
+
+**The problem** (MyFitnessPal's well-known wart, raised by Spencer): a single Snickers bar, a fun-size Snickers, and a box of Snickers each carry a **distinct GTIN**, but they're the **same food** — identical nutrition *per 100 g* and identical ingredient/allergen/diet profile. They differ only in **net weight, serving size, and multipack count**. A barcode scanner that treats every barcode as its own product gives you three "Snickers" entries with subtly different per-serving numbers, no clean history, and a fragile join for `product_selection` learning. We want: **scan any of the three → one nutritional truth → prefill the right *amount*.**
+
+**Model: split nutritional identity from the scannable package.**
+- **`food`** — the nutritional identity: nutrition **per 100 g** (the invariant), ingredient list, `diet_level`/allergens, brand + canonical name. This is what `recipe_line` resolves to and what `product_selection` (§3) learns. Size-independent.
+- **`product_package` (SKU)** — the scannable unit: `barcode` (GTIN-14), `net_weight_g`, `serving_size_g`, `servings_per_container`, `package_label` ("fun size" / "king size" / "12-ct box"). **Many packages → one `food`.**
+
+**Scan flow:** barcode → SKU → its `food` supplies nutrition; the SKU's `serving_size_g`/`net_weight_g` **prefills the quantity** ("1 bar" = one serving, or "whole box" = `net_weight_g`). Unknown barcode → look up OFF/FDC, create the SKU, and **cluster it onto an existing `food`** when the nutrition-per-100 g + ingredient fingerprint match; otherwise mint a new `food`.
+
+**Clustering is the crux** — and it's the *same dedup machinery as ingredients* (§3): OFF stores each barcode as its own product, so a box vs. a single bar are separate OFF rows that usually share `nutriments` per 100 g, `ingredients_text`, and brand. Merge `food`s by **(brand, normalized name, per-100 g nutrition within tolerance, ingredient fingerprint)**; **Opus adjudicates ambiguous merges**. Bias **conservative** — a wrong merge corrupts nutrition for every linked SKU, so when unsure keep distinct `food`s and offer the user a one-tap "these are the same" merge. (Diet/allergen is computed once on the `food`, not per SKU.)
+
+**Migration implication:** today's `product` table *conflates* food + package (it carries `barcode`, per-serving nutrition, **and** `serving_size`). The clean split — `food` (nutrition/diet/allergen) ⟂ `product_package` (barcode/size) — can wait until barcode scan lands (build-order step 6); until then `product` = one food with an optional primary barcode. **Flag for 0006+: introduce `product_package` rather than piling additional `barcode` values onto `product`.**
+
 ---
 
 ## 3. Abstract ingredient → preferred product (learned)
@@ -146,7 +160,7 @@ No existing column is dropped/retyped; the current seed + RLS keep working.
 3. **`import-recipe-url`** (JSON-LD + Haiku fallback) — the volume win for Jacq's blog recipes.
 4. **Ingredient resolution + product picker UI** (the learning loop) — wired into the Recipe-detail screen (M2).
 5. **`import-recipe-image`** (Opus vision) — cookbook photos.
-6. **Barcode scan** + OFF bulk-dump seed of the `product` table.
+6. **Barcode scan** + OFF bulk-dump seed — and the **`food` ⟂ `product_package` split** (§2a) so size variants collapse to one nutritional identity.
 
 ---
 
@@ -156,3 +170,4 @@ No existing column is dropped/retyped; the current seed + RLS keep working.
 - **Embedding match (pgvector):** start with exact + synonym + LLM; add pgvector fuzzy matching only if dedup misses pile up. *(default: defer)*
 - **Allergen scheme:** ship FDA Big 9 now, EU-14 later. *(default: Big 9)*
 - **How aggressively to auto-default vs. always-ask** for product choice on import — lean auto-default-to-compliant, one-tap confirm. *(default: auto + confirm)*
+- **Package-variant clustering threshold** (§2a) — how tight the per-100 g + ingredient match must be before two barcodes auto-merge to one `food`. Bias conservative (false-merge corrupts nutrition); user-confirmable merge for the gray zone. *(default: conservative auto-merge + manual merge affordance)*
