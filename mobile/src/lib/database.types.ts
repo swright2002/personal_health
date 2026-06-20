@@ -220,6 +220,41 @@ export type Database = {
           },
         ]
       }
+      ingredient_portion: {
+        Row: {
+          created_at: string
+          grams: number
+          id: string
+          ingredient_id: string
+          source: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          grams: number
+          id?: string
+          ingredient_id: string
+          source?: string
+          unit: string
+        }
+        Update: {
+          created_at?: string
+          grams?: number
+          id?: string
+          ingredient_id?: string
+          source?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_portion_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredient"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingredient_synonym: {
         Row: {
           confidence: number | null

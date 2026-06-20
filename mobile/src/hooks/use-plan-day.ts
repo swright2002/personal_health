@@ -15,6 +15,7 @@ import {
   ZERO_NUTRITION,
   type Nutrition,
 } from '@/lib/nutrition';
+import { lineFactor, type Portion } from '@/lib/units';
 
 export type PlanTarget = {
   kind: 'run_day' | 'rest_day' | 'maintenance';
@@ -94,7 +95,7 @@ export function usePlanDay(date: string) {
       const moments = momentsR.data ?? [];
       const momentIds = moments.map((m) => m.id);
 
-      const [membersR, targetsR, assignsR, recipesR, linesR, selR, productsR] = await Promise.all([
+      const [membersR, targetsR, assignsR, recipesR, linesR, selR, productsR, portionsR] = await Promise.all([
         supabase.from('member').select('id,name,short,initials,diet,accent_color,role'),
         supabase.from('target').select('member_id,kind,kcal,protein,carbs,fat,fiber'),
         supabase.from('moment_assignment').select('moment_id,member_id,recipe_id,servings').in('moment_id', momentIds),
@@ -102,9 +103,10 @@ export function usePlanDay(date: string) {
         supabase.from('recipe_line').select('recipe_id,ingredient_id,quantity,unit'),
         supabase.from('product_selection').select('ingredient_id,product_id').is('member_id', null),
         supabase.from('product').select('id,serving_size,serving_unit,kcal,protein,carbs,fat,fiber'),
+        supabase.from('ingredient_portion').select('ingredient_id,unit,grams'),
       ]);
 
-      const failed = [membersR, targetsR, assignsR, recipesR, linesR, selR, productsR].find((r) => r.error);
+      const failed = [membersR, targetsR, assignsR, recipesR, linesR, selR, productsR, portionsR].find((r) => r.error);
       if (failed?.error) {
         if (active) {
           setError(failed.error.message);
@@ -120,6 +122,7 @@ export function usePlanDay(date: string) {
       const lines = linesR.data ?? [];
       const selections = selR.data ?? [];
       const products = productsR.data ?? [];
+      const portions = portionsR.data ?? [];
 
       // ingredient -> its selected product
       const productById = new Map(products.map((p) => [p.id, p]));
@@ -127,6 +130,14 @@ export function usePlanDay(date: string) {
       for (const sel of selections) {
         const p = productById.get(sel.product_id);
         if (p) productByIngredient.set(sel.ingredient_id, p);
+      }
+
+      // ingredient -> its portion rows (cup/tbsp/can → grams) for unit conversion
+      const portionsByIngredient = new Map<string, Portion[]>();
+      for (const p of portions) {
+        const arr = portionsByIngredient.get(p.ingredient_id);
+        if (arr) arr.push({ unit: p.unit, grams: Number(p.grams) });
+        else portionsByIngredient.set(p.ingredient_id, [{ unit: p.unit, grams: Number(p.grams) }]);
       }
 
       const linesByRecipe = new Map<string, typeof lines>();
@@ -140,21 +151,21 @@ export function usePlanDay(date: string) {
       const recipeById = new Map(recipes.map((r) => [r.id, r]));
       const recipeNutr = new Map<string, Nutrition>();
       for (const r of recipes) {
-        // We can only compute `nutrition × quantity/serving_size` when the line's
-        // unit matches the product's serving unit. Real (per-100g) products picked
-        // for cup/tbsp lines would compute wrongly, so if ANY line's product has a
-        // mismatched unit we fall back to the recipe's cached nutrition instead of
-        // a corrupt partial total. (Unit→grams conversion is a later milestone.)
+        // Scale each line's product nutrition by (line amount)/(product serving),
+        // reconciling units via grams (units.lineFactor). If a mapped line's units
+        // can't be reconciled (no portion/density for a volume↔mass mismatch), the
+        // whole recipe falls back to its cached nutrition rather than report a
+        // corrupt partial total.
         let unitSafe = true;
         const inputs = (linesByRecipe.get(r.id) ?? []).map((l) => {
           const p = l.ingredient_id ? productByIngredient.get(l.ingredient_id) : undefined;
-          if (p && l.unit && p.serving_unit && p.serving_unit !== l.unit) unitSafe = false;
+          if (!p) return { n: ZERO_NUTRITION, factor: 0 };
+          const portionRows = l.ingredient_id ? portionsByIngredient.get(l.ingredient_id) ?? [] : [];
+          const factor = lineFactor(l.quantity ?? 0, l.unit ?? '', p.serving_size, p.serving_unit, portionRows);
+          if (factor == null) unitSafe = false;
           return {
-            n: p
-              ? { kcal: p.kcal, protein: p.protein, carbs: p.carbs, fat: p.fat, fiber: p.fiber }
-              : ZERO_NUTRITION,
-            quantity: l.quantity ?? 0,
-            servingSize: p?.serving_size ?? 1,
+            n: { kcal: p.kcal, protein: p.protein, carbs: p.carbs, fat: p.fat, fiber: p.fiber },
+            factor: factor ?? 0,
           };
         });
         // Product-computed nutrition; fall back to the recipe's cached

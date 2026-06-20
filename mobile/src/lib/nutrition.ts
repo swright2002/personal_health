@@ -34,18 +34,15 @@ export const roundFiber = (x: number) => Math.round(x * 10) / 10;
 export type RecipeLineInput = {
   /** the selected product's nutrition, per its serving_size */
   n: Nutrition;
-  /** how much the recipe line calls for, in the same unit as serving_size */
-  quantity: number;
-  /** the product's serving_size (the amount `n` is measured per) */
-  servingSize: number;
+  /** scale factor for this line = (line amount) / (product serving), unit-reconciled */
+  factor: number;
 };
 
 /** Per-serving nutrition for one recipe (matches the prototype's rounding). */
 export function recipeNutrition(lines: RecipeLineInput[], servings: number): Nutrition {
   let total = ZERO_NUTRITION;
   for (const line of lines) {
-    const factor = line.servingSize ? line.quantity / line.servingSize : 0;
-    total = addNutrition(total, scaleNutrition(line.n, factor));
+    total = addNutrition(total, scaleNutrition(line.n, line.factor));
   }
   const s = servings || 1;
   return {
