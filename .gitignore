@@ -44,3 +44,4 @@ extracted/
 # Scratch — screenshots / local notes (root-level only)
 /Screenshot*.png
 /screenshots/
+.playwright-mcp/
