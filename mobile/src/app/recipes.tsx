@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { addRecipeToPlan } from '@/lib/plan';
 import { formatDay, usePlanDate } from '@/lib/plan-date';
 import { useRecipes, type LibraryRecipe, type RecipeSlot } from '@/hooks/use-recipes';
+import { ProductPicker } from '@/components/product-picker';
 
 const SLOTS: RecipeSlot[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 const num = (x: number | null) => (x == null ? null : Math.round(Number(x)));
@@ -159,7 +160,8 @@ function RecipeCard({ r, background, onPress }: { r: LibraryRecipe; background: 
 
 // ── Detail view (modal) ─────────────────────────────────────────────────────
 
-type DetailLine = { text: string; heading: boolean; component: LibraryRecipe | null };
+type PickIngredient = { id: string; label: string; category: string | null };
+type DetailLine = { text: string; heading: boolean; component: LibraryRecipe | null; ingredient: PickIngredient | null };
 
 function isHeading(t: string): boolean {
   const s = t.trim();
@@ -200,6 +202,7 @@ function RecipeDetailModal({
   const { date } = usePlanDate();
   const [lines, setLines] = useState<DetailLine[] | null>(null);
   const [added, setAdded] = useState<string | null>(null);
+  const [pick, setPick] = useState<PickIngredient | null>(null);
 
   useEffect(() => {
     if (!recipe) return;
@@ -208,18 +211,23 @@ function RecipeDetailModal({
     let active = true;
     supabase
       .from('recipe_line')
-      .select('raw_text,name,quantity,unit,position,ingredient(label)')
+      .select('raw_text,name,quantity,unit,position,ingredient(id,label,category)')
       .eq('recipe_id', recipe.id)
       .order('position')
       .then(({ data }) => {
         if (!active) return;
         const built = (data ?? []).map((l): DetailLine => {
-          const ing = Array.isArray(l.ingredient) ? l.ingredient[0] : l.ingredient;
+          const ing: any = Array.isArray(l.ingredient) ? l.ingredient[0] : l.ingredient;
           const text =
             l.raw_text ??
             (ing?.label ? [l.quantity, l.unit, ing.label].filter(Boolean).join(' ') : l.name ?? '');
           const heading = isHeading(text);
-          return { text, heading, component: heading ? null : matchComponent(text, library, recipe.id) };
+          return {
+            text,
+            heading,
+            component: heading ? null : matchComponent(text, library, recipe.id),
+            ingredient: !heading && ing?.id ? { id: ing.id, label: ing.label, category: ing.category ?? null } : null,
+          };
         });
         setLines(built);
       });
@@ -325,6 +333,17 @@ function RecipeDetailModal({
                       {l.text}  →
                     </ThemedText>
                   </Pressable>
+                ) : l.ingredient ? (
+                  <View key={i} style={styles.ingLineRow}>
+                    <ThemedText type="small" themeColor="text" style={{ flex: 1 }}>
+                      {l.text}
+                    </ThemedText>
+                    <Pressable onPress={() => setPick(l.ingredient!)} hitSlop={6}>
+                      <ThemedText type="smallBold" style={{ color: Brand.accent }}>
+                        Set product
+                      </ThemedText>
+                    </Pressable>
+                  </View>
                 ) : (
                   <ThemedText key={i} type="small" themeColor="text">
                     {l.text}
@@ -334,6 +353,15 @@ function RecipeDetailModal({
             </View>
           )}
         </ScrollView>
+
+        {pick && householdId ? (
+          <ProductPicker
+            ingredient={pick}
+            householdId={householdId}
+            onClose={() => setPick(null)}
+            onChosen={() => setPick(null)}
+          />
+        ) : null}
     </View>
   );
 }
@@ -370,4 +398,5 @@ const styles = StyleSheet.create({
   ingHeading: { fontSize: 17, fontWeight: '800', marginTop: Spacing.four },
   ingList: { gap: Spacing.two, marginTop: Spacing.one },
   lineHeading: { textTransform: 'uppercase', letterSpacing: 0.5, color: Brand.deep, fontSize: 12, marginTop: Spacing.two },
+  ingLineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
 });

@@ -58,6 +58,27 @@ export type Database = {
           },
         ]
       }
+      allergen: {
+        Row: {
+          key: string
+          label: string
+          position: number | null
+          scheme: string
+        }
+        Insert: {
+          key: string
+          label: string
+          position?: number | null
+          scheme?: string
+        }
+        Update: {
+          key?: string
+          label?: string
+          position?: number | null
+          scheme?: string
+        }
+        Relationships: []
+      }
       biometric: {
         Row: {
           created_at: string
@@ -99,6 +120,47 @@ export type Database = {
           },
         ]
       }
+      food_term: {
+        Row: {
+          allergen_key: string | null
+          ambiguous: boolean
+          canonical: string
+          gluten: boolean
+          pescetarian_ok: boolean | null
+          term: string
+          vegan: boolean | null
+          vegetarian: boolean | null
+        }
+        Insert: {
+          allergen_key?: string | null
+          ambiguous?: boolean
+          canonical: string
+          gluten?: boolean
+          pescetarian_ok?: boolean | null
+          term: string
+          vegan?: boolean | null
+          vegetarian?: boolean | null
+        }
+        Update: {
+          allergen_key?: string | null
+          ambiguous?: boolean
+          canonical?: string
+          gluten?: boolean
+          pescetarian_ok?: boolean | null
+          term?: string
+          vegan?: boolean | null
+          vegetarian?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_term_allergen_key_fkey"
+            columns: ["allergen_key"]
+            isOneToOne: false
+            referencedRelation: "allergen"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       household: {
         Row: {
           created_at: string
@@ -119,6 +181,8 @@ export type Database = {
       }
       ingredient: {
         Row: {
+          canonical_key: string | null
+          category: string | null
           created_at: string
           household_id: string
           id: string
@@ -127,6 +191,8 @@ export type Database = {
           pantry: boolean
         }
         Insert: {
+          canonical_key?: string | null
+          category?: string | null
           created_at?: string
           household_id: string
           id?: string
@@ -135,6 +201,8 @@ export type Database = {
           pantry?: boolean
         }
         Update: {
+          canonical_key?: string | null
+          category?: string | null
           created_at?: string
           household_id?: string
           id?: string
@@ -152,40 +220,94 @@ export type Database = {
           },
         ]
       }
+      ingredient_synonym: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          household_id: string | null
+          id: string
+          ingredient_id: string
+          source: string | null
+          surface: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          ingredient_id: string
+          source?: string | null
+          surface: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          ingredient_id?: string
+          source?: string | null
+          surface?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_synonym_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "household"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredient_synonym_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredient"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member: {
         Row: {
           accent_color: string | null
+          allergies: string[]
           auth_user_id: string | null
           created_at: string
           diet: string
+          diet_level: number | null
           household_id: string
           id: string
           initials: string
           name: string
+          restrictions: string[]
           role: string
           short: string
         }
         Insert: {
           accent_color?: string | null
+          allergies?: string[]
           auth_user_id?: string | null
           created_at?: string
           diet?: string
+          diet_level?: number | null
           household_id: string
           id?: string
           initials: string
           name: string
+          restrictions?: string[]
           role?: string
           short: string
         }
         Update: {
           accent_color?: string | null
+          allergies?: string[]
           auth_user_id?: string | null
           created_at?: string
           diet?: string
+          diet_level?: number | null
           household_id?: string
           id?: string
           initials?: string
           name?: string
+          restrictions?: string[]
           role?: string
           short?: string
         }
@@ -298,61 +420,100 @@ export type Database = {
       }
       product: {
         Row: {
+          allergen_traces: string[]
+          allergens: string[]
+          analysis_source: string | null
+          barcode: string | null
           brand: string
           carbs: number
           created_at: string
+          diet_level: number | null
+          diet_status: string | null
           fat: number
           fiber: number
+          gluten_free: boolean | null
           id: string
           ingredient_id: string
+          ingredients_text: string | null
           is_default: boolean
           kcal: number
+          name: string | null
+          net_weight_g: number | null
           note: string | null
           price: number | null
           protein: number
           serving_size: number
           serving_unit: string
+          servings_per_container: number | null
           size: string | null
           sodium: number
-          store: string
+          source_ref: string | null
+          source_url: string | null
+          store: string | null
         }
         Insert: {
+          allergen_traces?: string[]
+          allergens?: string[]
+          analysis_source?: string | null
+          barcode?: string | null
           brand: string
           carbs?: number
           created_at?: string
+          diet_level?: number | null
+          diet_status?: string | null
           fat?: number
           fiber?: number
+          gluten_free?: boolean | null
           id?: string
           ingredient_id: string
+          ingredients_text?: string | null
           is_default?: boolean
           kcal?: number
+          name?: string | null
+          net_weight_g?: number | null
           note?: string | null
           price?: number | null
           protein?: number
           serving_size?: number
           serving_unit: string
+          servings_per_container?: number | null
           size?: string | null
           sodium?: number
-          store: string
+          source_ref?: string | null
+          source_url?: string | null
+          store?: string | null
         }
         Update: {
+          allergen_traces?: string[]
+          allergens?: string[]
+          analysis_source?: string | null
+          barcode?: string | null
           brand?: string
           carbs?: number
           created_at?: string
+          diet_level?: number | null
+          diet_status?: string | null
           fat?: number
           fiber?: number
+          gluten_free?: boolean | null
           id?: string
           ingredient_id?: string
+          ingredients_text?: string | null
           is_default?: boolean
           kcal?: number
+          name?: string | null
+          net_weight_g?: number | null
           note?: string | null
           price?: number | null
           protein?: number
           serving_size?: number
           serving_unit?: string
+          servings_per_container?: number | null
           size?: string | null
           sodium?: number
-          store?: string
+          source_ref?: string | null
+          source_url?: string | null
+          store?: string | null
         }
         Relationships: [
           {
@@ -368,19 +529,25 @@ export type Database = {
         Row: {
           household_id: string
           ingredient_id: string
+          member_id: string | null
           product_id: string
+          source: string
           updated_at: string
         }
         Insert: {
           household_id: string
           ingredient_id: string
+          member_id?: string | null
           product_id: string
+          source?: string
           updated_at?: string
         }
         Update: {
           household_id?: string
           ingredient_id?: string
+          member_id?: string | null
           product_id?: string
+          source?: string
           updated_at?: string
         }
         Relationships: [
@@ -396,6 +563,13 @@ export type Database = {
             columns: ["ingredient_id"]
             isOneToOne: false
             referencedRelation: "ingredient"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_selection_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "member"
             referencedColumns: ["id"]
           },
           {
@@ -540,6 +714,46 @@ export type Database = {
             columns: ["recipe_id"]
             isOneToOne: false
             referencedRelation: "recipe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_line_product: {
+        Row: {
+          member_id: string
+          product_id: string
+          recipe_line_id: string
+        }
+        Insert: {
+          member_id: string
+          product_id: string
+          recipe_line_id: string
+        }
+        Update: {
+          member_id?: string
+          product_id?: string
+          recipe_line_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_line_product_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "member"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_line_product_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_line_product_recipe_line_id_fkey"
+            columns: ["recipe_line_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_line"
             referencedColumns: ["id"]
           },
         ]

@@ -99,9 +99,9 @@ export function usePlanDay(date: string) {
         supabase.from('target').select('member_id,kind,kcal,protein,carbs,fat,fiber'),
         supabase.from('moment_assignment').select('moment_id,member_id,recipe_id,servings').in('moment_id', momentIds),
         supabase.from('recipe').select('id,name,slot,servings,kcal,protein,carbs,fat,fiber'),
-        supabase.from('recipe_line').select('recipe_id,ingredient_id,quantity'),
-        supabase.from('product_selection').select('ingredient_id,product_id'),
-        supabase.from('product').select('id,serving_size,kcal,protein,carbs,fat,fiber'),
+        supabase.from('recipe_line').select('recipe_id,ingredient_id,quantity,unit'),
+        supabase.from('product_selection').select('ingredient_id,product_id').is('member_id', null),
+        supabase.from('product').select('id,serving_size,serving_unit,kcal,protein,carbs,fat,fiber'),
       ]);
 
       const failed = [membersR, targetsR, assignsR, recipesR, linesR, selR, productsR].find((r) => r.error);
@@ -140,8 +140,15 @@ export function usePlanDay(date: string) {
       const recipeById = new Map(recipes.map((r) => [r.id, r]));
       const recipeNutr = new Map<string, Nutrition>();
       for (const r of recipes) {
+        // We can only compute `nutrition × quantity/serving_size` when the line's
+        // unit matches the product's serving unit. Real (per-100g) products picked
+        // for cup/tbsp lines would compute wrongly, so if ANY line's product has a
+        // mismatched unit we fall back to the recipe's cached nutrition instead of
+        // a corrupt partial total. (Unit→grams conversion is a later milestone.)
+        let unitSafe = true;
         const inputs = (linesByRecipe.get(r.id) ?? []).map((l) => {
           const p = l.ingredient_id ? productByIngredient.get(l.ingredient_id) : undefined;
+          if (p && l.unit && p.serving_unit && p.serving_unit !== l.unit) unitSafe = false;
           return {
             n: p
               ? { kcal: p.kcal, protein: p.protein, carbs: p.carbs, fat: p.fat, fiber: p.fiber }
@@ -154,7 +161,8 @@ export function usePlanDay(date: string) {
         // per-serving values (imported recipes have no product mapping yet).
         const computed = recipeNutrition(inputs, r.servings);
         const hasProducts =
-          computed.kcal > 0 || computed.protein > 0 || computed.carbs > 0 || computed.fat > 0 || computed.fiber > 0;
+          unitSafe &&
+          (computed.kcal > 0 || computed.protein > 0 || computed.carbs > 0 || computed.fat > 0 || computed.fiber > 0);
         recipeNutr.set(
           r.id,
           hasProducts
