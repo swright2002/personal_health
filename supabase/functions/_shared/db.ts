@@ -30,3 +30,17 @@ export async function loadMembers(req: Request): Promise<Member[]> {
     restrictions: m.restrictions ?? [],
   }));
 }
+
+/** Brands the household already buys, learned from their DELIBERATE choices
+ *  (source='manual'), not auto-suggestions — so a random brand the engine
+ *  happened to auto-pick on some ingredient doesn't pollute the preference. */
+export async function loadPreferredBrands(req: Request): Promise<string[]> {
+  const rows = await rest(req, 'product_selection?member_id=is.null&source=eq.manual&select=product(brand)');
+  const brands = new Set<string>();
+  for (const r of rows) {
+    const p = Array.isArray(r.product) ? r.product[0] : r.product;
+    const b = (p?.brand || '').trim();
+    if (b) brands.add(b);
+  }
+  return [...brands];
+}

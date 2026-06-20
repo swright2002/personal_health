@@ -7,7 +7,7 @@ import { deriveDietAllergen } from '../_shared/diet.ts';
 import { rankCandidates } from '../_shared/ranking.ts';
 import { EMPTY_NUTRITION, per100From, ProductCandidate, publicCandidate, round } from '../_shared/normalize.ts';
 import { ingredientBasis } from '../_shared/forms.ts';
-import { loadFoodTerms, loadMembers } from '../_shared/db.ts';
+import { loadFoodTerms, loadMembers, loadPreferredBrands } from '../_shared/db.ts';
 
 const ANALYZE_WHOLE_FOOD = new Set(['produce', 'grain', 'legume', 'meat', 'fish', 'dairy', 'oil', 'spice', 'nut']);
 // Plain whole foods of these categories are vegan (used to infer diet for FDC
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     const brandIntent: boolean = !!body.brand_intent;
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY') ?? undefined;
 
-    const [foodTerms, members] = await Promise.all([loadFoodTerms(req), loadMembers(req)]);
+    const [foodTerms, members, preferredBrands] = await Promise.all([loadFoodTerms(req), loadMembers(req), loadPreferredBrands(req)]);
 
     const ingBasis = ingredientBasis(label, category);
 
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { ranked, auto_suggest_index } = rankCandidates(candidates, { label, category, brandIntent, members, ingredientBasis: ingBasis });
+    const { ranked, auto_suggest_index } = rankCandidates(candidates, { label, category, brandIntent, members, ingredientBasis: ingBasis, preferredBrands });
     return json({
       ok: true,
       candidates: ranked.map((c) => ({ ...publicCandidate(c), compliance: (c as any).compliance })),

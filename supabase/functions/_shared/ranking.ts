@@ -1,6 +1,13 @@
 // Auto-suggest ranking + per-member compliance (spec §F).
 import { completenessScore, ProductCandidate } from './normalize.ts';
 import { formMatchScore } from './forms.ts';
+import { fuzzyBrandMatch } from './gtin.ts';
+
+/** Has the household bought this brand before? 0 = a brand they use, 1 = not (learned preference). */
+function brandAffinity(brand: string | null | undefined, preferred: string[]): number {
+  if (!brand || !preferred.length) return 1;
+  return preferred.some((p) => fuzzyBrandMatch(brand, p) >= 0.6) ? 0 : 1;
+}
 
 export type Member = { id: string; diet_level: number; allergies: string[]; restrictions: string[] };
 export type Tag = 'allowed' | 'unverified' | 'disallowed';
@@ -77,10 +84,13 @@ const NON_IDENTITY = new Set([
 const idTokens = (s: string) =>
   s.toLowerCase().replace(/[,()]/g, ' ').split(/\s+/).map((w) => w.replace(/s$/, '')).filter((w) => w.length > 2 && !NON_IDENTITY.has(w));
 
-/** 0 = clean identity match; higher = missing tokens or extra "drift" tokens. */
-function matchStrength(name: string, label: string): number {
+/** 0 = clean identity match; higher = missing tokens or extra "drift" tokens.
+ *  Brand words are stripped from the name so a preferred-brand product (e.g.
+ *  "365 ... Cherries") isn't penalized for relevance vs an unbranded one. */
+function matchStrength(name: string, label: string, brand?: string | null): number {
   const want = idTokens(label);
-  const have = idTokens(name);
+  const brandTokens = new Set(brand ? idTokens(brand) : []);
+  const have = idTokens(name).filter((t) => !brandTokens.has(t));
   if (!want.length) return 3;
   const allPresent = want.every((w) => have.some((t) => t.includes(w) || w.includes(t)));
   if (!allPresent) return want.some((w) => have.some((t) => t.includes(w) || w.includes(t))) ? 4 : 6;
@@ -100,9 +110,11 @@ export function rankCandidates(
     brandIntent: boolean;
     members: Member[];
     ingredientBasis?: 'wet' | 'dry' | 'unknown';
+    preferredBrands?: string[]; // brands the household already buys (learned)
   },
 ): { ranked: RankedCandidate[]; auto_suggest_index: number | null } {
   const ingBasis = opts.ingredientBasis ?? 'unknown';
+  const preferred = opts.preferredBrands ?? [];
   const scored = candidates.map((c) => {
     const perMember: Record<string, Tag> = {};
     for (const m of opts.members) perMember[m.id] = complianceFor(c, m);
@@ -112,7 +124,8 @@ export function rankCandidates(
       c.nutrition.kcal == null ? 1 : 0, // a product with no calories can't fill a nutrition slot
       DIET_CONF[c.diet_status ?? 'unknown'] ?? 3,
       formMatchScore(ingBasis, c.form ?? null), // cooked-for-cooked beats dry-for-cooked (nutrition basis)
-      matchStrength(c.name, opts.label), // relevance: a clean name match beats a tangential one from a preferred source
+      matchStrength(c.name, opts.label, c.brand), // relevance: a clean name match beats a tangential one
+      brandAffinity(c.brand, preferred), // prefer a brand the household already buys, among equally-relevant
       sourceRank(c.analysis_source, opts.category, opts.brandIntent),
       -completenessScore(c),
       c.barcode ?? 'zzz', // deterministic tie-break
